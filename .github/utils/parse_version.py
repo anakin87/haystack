@@ -41,17 +41,18 @@ def parse_version(version_input: str) -> dict[str, str]:
     is_minor = patch == "0"
     is_first_rc = is_minor and "rc1" in version
 
-    if is_first_rc:
-        version_in_txt = Path("VERSION.txt").read_text().strip()
-        if version_in_txt != f"{major}.{minor}.0-rc0":
-            msg = (
-                "When releasing rc1 of a minor version, VERSION.txt must contain the corresponding rc0 version."
-                f"Expected: {major}.{minor}.0-rc0, Got: {version_in_txt}"
-            )
-            raise ValueError(msg)
+    # if is_first_rc:
+    #     version_in_txt = Path("VERSION.txt").read_text().strip()
+    #     if version_in_txt != f"{major}.{minor}.0-rc0":
+    #         msg = (
+    #             "When releasing rc1 of a minor version, VERSION.txt must contain the corresponding rc0 version."
+    #             f"Expected: {major}.{minor}.0-rc0, Got: {version_in_txt}"
+    #         )
+    #         raise ValueError(msg)
 
     return {
         "version": version,
+        "major_minor": f"{major}.{minor}",
         "release_branch": release_branch,
         "is_minor": str(is_minor).lower(),
         "is_first_rc": str(is_first_rc).lower(),

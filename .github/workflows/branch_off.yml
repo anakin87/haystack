@@ -1,7 +1,15 @@
-name: Minor Version Release
+name: Branch off
 
 on:
   workflow_dispatch:
+
+  workflow_call:
+    inputs:
+      version:
+        description: 'Version to release with major.minor format (e.g., 2.99)'
+        required: true
+        type: string
+
 env:
   PYTHON_VERSION: "3.9"
 
@@ -19,7 +27,12 @@ jobs:
         shell: bash
         # We only need `major.minor` in Readme so we cut the full version string to the first two tokens
         run: |
-          echo "current_release_minor=$(cut -d "." -f 1,2 < VERSION.txt)" >> "$GITHUB_OUTPUT"
+          # if provided, use the version input, otherwise use the version in VERSION.txt
+          if [ -n "${{ inputs.version }}" ]; then
+            echo "current_release_minor=${{ inputs.version }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "current_release_minor=$(cut -d "." -f 1,2 < VERSION.txt)" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Bump version on main
         shell: bash
