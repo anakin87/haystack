@@ -1,0 +1,70 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to release (e.g., v2.99.0-rc1 or v2.99.0)'
+        required: true
+        type: string
+
+jobs:
+  parse-version:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.parse.outputs.version }}
+      release_branch: ${{ steps.parse.outputs.release_branch }}
+      is_minor: ${{ steps.parse.outputs.is_minor }}
+      is_first_rc: ${{ steps.parse.outputs.is_first_rc }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      
+      - name: Parse version
+        id: parse
+        run: |
+          OUTPUT=$(python3 .github/utils/parse_version.py "${{ inputs.version }}")
+          echo "$OUTPUT" >> "$GITHUB_OUTPUT"
+          echo "$GITHUB_OUTPUT"
+
+#   branch-off:
+#     if: needs.parse-version.outputs.is_first_rc == 'true'
+#     needs: parse-version
+#     uses: ./.github/workflows/minor_version_release.yml
+#     # Note: This would require minor_version_release.yml to support workflow_call
+
+#   release:
+#     needs: parse-version
+#     if: always() && (needs.branch-off.result == 'success' || needs.branch-off.result == 'skipped')
+#     runs-on: ubuntu-latest
+#     permissions:
+#       contents: write
+#     steps:
+#       - name: Checkout repository
+#         uses: actions/checkout@v5
+#         with:
+#           fetch-depth: 0
+#           token: ${{ secrets.GITHUB_TOKEN }}
+
+#       - name: Configure git
+#         run: |
+#           git config --global user.name "github-actions[bot]"
+#           git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+#       - name: Checkout release branch
+#         run: |
+#           git checkout ${{ needs.parse-version.outputs.release_branch }}
+#           git pull origin ${{ needs.parse-version.outputs.release_branch }}
+
+#       - name: Update VERSION.txt and create tag
+#         run: |
+#           echo "${{ needs.parse-version.outputs.version }}" > VERSION.txt
+#           git add VERSION.txt
+#           git commit -m "bump version to ${{ needs.parse-version.outputs.version }}"
+#           git push origin ${{ needs.parse-version.outputs.release_branch }}
+          
+#           TAG="v${{ needs.parse-version.outputs.version }}"
+#           git tag -m "$TAG" "$TAG"
+#           git push origin "$TAG"
