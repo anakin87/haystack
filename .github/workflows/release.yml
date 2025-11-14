@@ -39,7 +39,7 @@ jobs:
 
   release:
     needs: ["parse-version", "branch-off"]
-    if: needs.branch-off.result != 'failure'
+    if: always() && needs.parse-version.result == 'success' && needs.branch-off.result != 'failure'
     runs-on: ubuntu-latest
     permissions:
       contents: write
