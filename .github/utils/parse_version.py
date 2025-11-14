@@ -38,6 +38,7 @@ def parse_version(version_input: str) -> dict[str, str]:
 
     release_branch = f"v{major}.{minor}.x"
     is_minor = patch == "0"
+    is_rc = "-rc" in version
     is_first_rc = is_minor and "rc1" in version
 
     # if is_first_rc:
@@ -54,6 +55,7 @@ def parse_version(version_input: str) -> dict[str, str]:
         "major_minor": f"{major}.{minor}",
         "release_branch": release_branch,
         "is_minor": str(is_minor).lower(),
+        "is_rc": str(is_rc).lower(),
         "is_first_rc": str(is_first_rc).lower(),
     }
 
