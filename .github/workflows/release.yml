@@ -37,36 +37,36 @@ jobs:
     with:
       version: ${{ needs.parse-version.outputs.major_minor }}
 
-#   release:
-#     needs: parse-version
-#     if: always() && (needs.branch-off.result == 'success' || needs.branch-off.result == 'skipped')
-#     runs-on: ubuntu-latest
-#     permissions:
-#       contents: write
-#     steps:
-#       - name: Checkout repository
-#         uses: actions/checkout@v5
-#         with:
-#           fetch-depth: 0
-#           token: ${{ secrets.GITHUB_TOKEN }}
+  release:
+    needs: parse-version
+    if: always() && (needs.branch-off.result == 'success' || needs.branch-off.result == 'skipped')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.PAT_TOKEN }}
 
-#       - name: Configure git
-#         run: |
-#           git config --global user.name "github-actions[bot]"
-#           git config --global user.email "github-actions[bot]@users.noreply.github.com"
+      - name: Configure git
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
-#       - name: Checkout release branch
-#         run: |
-#           git checkout ${{ needs.parse-version.outputs.release_branch }}
-#           git pull origin ${{ needs.parse-version.outputs.release_branch }}
+      - name: Checkout release branch
+        run: |
+          git checkout ${{ needs.parse-version.outputs.release_branch }}
+          git pull origin ${{ needs.parse-version.outputs.release_branch }}
 
-#       - name: Update VERSION.txt and create tag
-#         run: |
-#           echo "${{ needs.parse-version.outputs.version }}" > VERSION.txt
-#           git add VERSION.txt
-#           git commit -m "bump version to ${{ needs.parse-version.outputs.version }}"
-#           git push origin ${{ needs.parse-version.outputs.release_branch }}
+      - name: Update VERSION.txt and create tag
+        run: |
+          echo "${{ needs.parse-version.outputs.version }}" > VERSION.txt
+          git add VERSION.txt
+          git commit -m "bump version to ${{ needs.parse-version.outputs.version }}"
+          git push origin ${{ needs.parse-version.outputs.release_branch }}
           
-#           TAG="v${{ needs.parse-version.outputs.version }}"
-#           git tag -m "$TAG" "$TAG"
-#           git push origin "$TAG"
+          TAG="v${{ needs.parse-version.outputs.version }}"
+          git tag -m "$TAG" "$TAG"
+          git push origin "$TAG"
