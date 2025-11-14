@@ -25,7 +25,8 @@ jobs:
         run: hatch build
 
       - name: Publish on PyPi
-        env:
-          HATCH_INDEX_USER: __token__
-          HATCH_INDEX_AUTH: ${{ secrets.HAYSTACK_AI_PYPI_TOKEN }}
-        run: hatch publish -y
+        # env:
+        #   HATCH_INDEX_USER: __token__
+        #   HATCH_INDEX_AUTH: ${{ secrets.HAYSTACK_AI_PYPI_TOKEN }}
+        # run: hatch publish -y
+        run: echo "Not implemented"

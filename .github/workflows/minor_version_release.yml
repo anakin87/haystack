@@ -26,7 +26,7 @@ jobs:
         env:
           # We use the HAYSTACK_BOT_TOKEN here so the PR created by the step will
           # trigger required workflows and can be merged by anyone
-          GITHUB_TOKEN: ${{ secrets.HAYSTACK_BOT_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
@@ -86,7 +86,7 @@ jobs:
       - name: Create Pull Request with Docusaurus docs updates
         uses: peter-evans/create-pull-request@v7
         with:
-          token: ${{ secrets.HAYSTACK_BOT_TOKEN }}
+          token: ${{ secrets.GITHUB_TOKEN }}
           commit-message: "Create unstable docs for Haystack ${{ steps.versions.outputs.current_release_minor }}"
           branch: create-unstable-docs-${{ steps.versions.outputs.current_release_minor }}
           base: main

@@ -46,7 +46,7 @@ jobs:
       - name: Create Pull Request with Docusaurus docs updates
         uses: peter-evans/create-pull-request@v7
         with:
-          token: ${{ secrets.HAYSTACK_BOT_TOKEN }}
+          token: ${{ secrets.GITHUB_TOKEN }}
           commit-message: "Promote unstable docs for Haystack ${{ steps.version.outputs.version }}"
           branch: promote-unstable-docs-${{ steps.version.outputs.version }}
           base: main

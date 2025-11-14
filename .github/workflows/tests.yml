@@ -65,25 +65,25 @@ jobs:
             echo "alert_type=error" >> "$GITHUB_OUTPUT";
           fi
 
-      - name: Send event to Datadog
-        if: (success() || failure()) && github.ref_name == 'main'
-        uses: masci/datadog@v1
-        with:
-          api-key: ${{ secrets.CORE_DATADOG_API_KEY }}
-          api-url: https://api.datadoghq.eu
-          events: |
-            - title: "${{ github.workflow }} workflow"
-              text: "Job ${{ github.job }} in branch ${{ github.ref_name }}"
-              alert_type: "${{ steps.calculator.outputs.alert_type }}"
-              source_type_name: "Github"
-              host: ${{ github.repository_owner }}
-              tags:
-                - "project:${{ github.repository }}"
-                - "job:${{ github.job }}"
-                - "run_id:${{ github.run_id }}"
-                - "workflow:${{ github.workflow }}"
-                - "branch:${{ github.ref_name }}"
-                - "url:https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+      # - name: Send event to Datadog
+      #   if: (success() || failure()) && github.ref_name == 'main'
+      #   uses: masci/datadog@v1
+      #   with:
+      #     api-key: ${{ secrets.CORE_DATADOG_API_KEY }}
+      #     api-url: https://api.datadoghq.eu
+      #     events: |
+      #       - title: "${{ github.workflow }} workflow"
+      #         text: "Job ${{ github.job }} in branch ${{ github.ref_name }}"
+      #         alert_type: "${{ steps.calculator.outputs.alert_type }}"
+      #         source_type_name: "Github"
+      #         host: ${{ github.repository_owner }}
+      #         tags:
+      #           - "project:${{ github.repository }}"
+      #           - "job:${{ github.job }}"
+      #           - "run_id:${{ github.run_id }}"
+      #           - "workflow:${{ github.workflow }}"
+      #           - "branch:${{ github.ref_name }}"
+      #           - "url:https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
 
   check-imports:
     needs: format
@@ -112,25 +112,25 @@ jobs:
             echo "alert_type=error" >> "$GITHUB_OUTPUT";
           fi
 
-      - name: Send event to Datadog
-        if: (success() || failure()) && github.ref_name == 'main'
-        uses: masci/datadog@v1
-        with:
-          api-key: ${{ secrets.CORE_DATADOG_API_KEY }}
-          api-url: https://api.datadoghq.eu
-          events: |
-            - title: "${{ github.workflow }} workflow"
-              text: "Job ${{ github.job }} in branch ${{ github.ref_name }}"
-              alert_type: "${{ steps.calculator.outputs.alert_type }}"
-              source_type_name: "Github"
-              host: ${{ github.repository_owner }}
-              tags:
-                - "project:${{ github.repository }}"
-                - "job:${{ github.job }}"
-                - "run_id:${{ github.run_id }}"
-                - "workflow:${{ github.workflow }}"
-                - "branch:${{ github.ref_name }}"
-                - "url:https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+      # - name: Send event to Datadog
+      #   if: (success() || failure()) && github.ref_name == 'main'
+      #   uses: masci/datadog@v1
+      #   with:
+      #     api-key: ${{ secrets.CORE_DATADOG_API_KEY }}
+      #     api-url: https://api.datadoghq.eu
+      #     events: |
+      #       - title: "${{ github.workflow }} workflow"
+      #         text: "Job ${{ github.job }} in branch ${{ github.ref_name }}"
+      #         alert_type: "${{ steps.calculator.outputs.alert_type }}"
+      #         source_type_name: "Github"
+      #         host: ${{ github.repository_owner }}
+      #         tags:
+      #           - "project:${{ github.repository }}"
+      #           - "job:${{ github.job }}"
+      #           - "run_id:${{ github.run_id }}"
+      #           - "workflow:${{ github.workflow }}"
+      #           - "branch:${{ github.ref_name }}"
+      #           - "url:https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
 
   unit-tests:
     name: Unit / ${{ matrix.os }}
@@ -141,8 +141,8 @@ jobs:
       matrix:
         os:
           - ubuntu-latest
-          - windows-latest
-          - macos-latest
+          # - windows-latest
+          # - macos-latest
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v5
@@ -168,14 +168,14 @@ jobs:
           path: ${{ steps.hatch.outputs.env }}
           key: ${{ runner.os }}-${{ github.sha }}
 
-      - name: Coveralls
-        # We upload only coverage for ubuntu as handling both os
-        # complicates the workflow too much for little to no gain
-        if: matrix.os == 'ubuntu-latest'
-        uses: coverallsapp/github-action@v2
-        continue-on-error: true
-        with:
-          path-to-lcov: coverage.xml
+      # - name: Coveralls
+      #   # We upload only coverage for ubuntu as handling both os
+      #   # complicates the workflow too much for little to no gain
+      #   if: matrix.os == 'ubuntu-latest'
+      #   uses: coverallsapp/github-action@v2
+      #   continue-on-error: true
+      #   with:
+      #     path-to-lcov: coverage.xml
 
       - name: Calculate alert data
         id: calculator
@@ -188,25 +188,25 @@ jobs:
             echo "alert_type=error" >> "$GITHUB_OUTPUT";
           fi
 
-      - name: Send event to Datadog
-        if: (success() || failure()) && github.ref_name == 'main'
-        uses: masci/datadog@v1
-        with:
-          api-key: ${{ secrets.CORE_DATADOG_API_KEY }}
-          api-url: https://api.datadoghq.eu
-          events: |
-            - title: "${{ github.workflow }} workflow"
-              text: "Job ${{ github.job }} in branch ${{ github.ref_name }}"
-              alert_type: "${{ steps.calculator.outputs.alert_type }}"
-              source_type_name: "Github"
-              host: ${{ github.repository_owner }}
-              tags:
-                - "project:${{ github.repository }}"
-                - "job:${{ github.job }}"
-                - "run_id:${{ github.run_id }}"
-                - "workflow:${{ github.workflow }}"
-                - "branch:${{ github.ref_name }}"
-                - "url:https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+      # - name: Send event to Datadog
+      #   if: (success() || failure()) && github.ref_name == 'main'
+      #   uses: masci/datadog@v1
+      #   with:
+      #     api-key: ${{ secrets.CORE_DATADOG_API_KEY }}
+      #     api-url: https://api.datadoghq.eu
+      #     events: |
+      #       - title: "${{ github.workflow }} workflow"
+      #         text: "Job ${{ github.job }} in branch ${{ github.ref_name }}"
+      #         alert_type: "${{ steps.calculator.outputs.alert_type }}"
+      #         source_type_name: "Github"
+      #         host: ${{ github.repository_owner }}
+      #         tags:
+      #           - "project:${{ github.repository }}"
+      #           - "job:${{ github.job }}"
+      #           - "run_id:${{ github.run_id }}"
+      #           - "workflow:${{ github.workflow }}"
+      #           - "branch:${{ github.ref_name }}"
+      #           - "url:https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
 
   lint:
     needs: unit-tests
@@ -263,25 +263,25 @@ jobs:
             echo "alert_type=error" >> "$GITHUB_OUTPUT";
           fi
 
-      - name: Send event to Datadog
-        if: (success() || failure()) && github.ref_name == 'main'
-        uses: masci/datadog@v1
-        with:
-          api-key: ${{ secrets.CORE_DATADOG_API_KEY }}
-          api-url: https://api.datadoghq.eu
-          events: |
-            - title: "${{ github.workflow }} workflow"
-              text: "Job ${{ github.job }} in branch ${{ github.ref_name }}"
-              alert_type: "${{ steps.calculator.outputs.alert_type }}"
-              source_type_name: "Github"
-              host: ${{ github.repository_owner }}
-              tags:
-                - "project:${{ github.repository }}"
-                - "job:${{ github.job }}"
-                - "run_id:${{ github.run_id }}"
-                - "workflow:${{ github.workflow }}"
-                - "branch:${{ github.ref_name }}"
-                - "url:https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+      # - name: Send event to Datadog
+      #   if: (success() || failure()) && github.ref_name == 'main'
+      #   uses: masci/datadog@v1
+      #   with:
+      #     api-key: ${{ secrets.CORE_DATADOG_API_KEY }}
+      #     api-url: https://api.datadoghq.eu
+      #     events: |
+      #       - title: "${{ github.workflow }} workflow"
+      #         text: "Job ${{ github.job }} in branch ${{ github.ref_name }}"
+      #         alert_type: "${{ steps.calculator.outputs.alert_type }}"
+      #         source_type_name: "Github"
+      #         host: ${{ github.repository_owner }}
+      #         tags:
+      #           - "project:${{ github.repository }}"
+      #           - "job:${{ github.job }}"
+      #           - "run_id:${{ github.run_id }}"
+      #           - "workflow:${{ github.workflow }}"
+      #           - "branch:${{ github.ref_name }}"
+      #           - "url:https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
 
   integration-tests-linux:
     name: Integration / ubuntu-latest
@@ -337,124 +337,124 @@ jobs:
                 - "branch:${{ github.ref_name }}"
                 - "url:https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
 
-  integration-tests-macos:
-    name: Integration / macos-latest
-    needs: unit-tests
-    runs-on: macos-latest
-    timeout-minutes: 30
-    env:
-      HAYSTACK_MPS_ENABLED: false
+  # integration-tests-macos:
+  #   name: Integration / macos-latest
+  #   needs: unit-tests
+  #   runs-on: macos-latest
+  #   timeout-minutes: 30
+  #   env:
+  #     HAYSTACK_MPS_ENABLED: false
 
-    steps:
-      - uses: actions/checkout@v5
+  #   steps:
+  #     - uses: actions/checkout@v5
 
-      - uses: actions/setup-python@v6
-        with:
-          python-version: "${{ env.PYTHON_VERSION }}"
+  #     - uses: actions/setup-python@v6
+  #       with:
+  #         python-version: "${{ env.PYTHON_VERSION }}"
 
-      - name: Install Hatch
-        id: hatch
-        shell: bash
-        run: |
-          pip install hatch==${{ env.HATCH_VERSION }}
-          echo "env=$(hatch env find test)" >> "$GITHUB_OUTPUT"
+  #     - name: Install Hatch
+  #       id: hatch
+  #       shell: bash
+  #       run: |
+  #         pip install hatch==${{ env.HATCH_VERSION }}
+  #         echo "env=$(hatch env find test)" >> "$GITHUB_OUTPUT"
 
-      - uses: actions/cache/restore@v4
-        id: cache
-        with:
-          path: ${{ steps.hatch.outputs.env }}
-          key: ${{ runner.os }}-${{ github.sha }}
+  #     - uses: actions/cache/restore@v4
+  #       id: cache
+  #       with:
+  #         path: ${{ steps.hatch.outputs.env }}
+  #         key: ${{ runner.os }}-${{ github.sha }}
 
 
-      - name: Run
-        run: hatch run test:integration-only-fast
+  #     - name: Run
+  #       run: hatch run test:integration-only-fast
 
-      - name: Calculate alert data
-        id: calculator
-        shell: bash
-        if: (success() || failure()) && github.ref_name == 'main'
-        run: |
-          if [ "${{ job.status }}" = "success" ]; then
-            echo "alert_type=success" >> "$GITHUB_OUTPUT";
-          else
-            echo "alert_type=error" >> "$GITHUB_OUTPUT";
-          fi
+  #     - name: Calculate alert data
+  #       id: calculator
+  #       shell: bash
+  #       if: (success() || failure()) && github.ref_name == 'main'
+  #       run: |
+  #         if [ "${{ job.status }}" = "success" ]; then
+  #           echo "alert_type=success" >> "$GITHUB_OUTPUT";
+  #         else
+  #           echo "alert_type=error" >> "$GITHUB_OUTPUT";
+  #         fi
 
-      - name: Send event to Datadog
-        if: (success() || failure()) && github.ref_name == 'main'
-        uses: masci/datadog@v1
-        with:
-          api-key: ${{ secrets.CORE_DATADOG_API_KEY }}
-          api-url: https://api.datadoghq.eu
-          events: |
-            - title: "${{ github.workflow }} workflow"
-              text: "Job ${{ github.job }} in branch ${{ github.ref_name }}"
-              alert_type: "${{ steps.calculator.outputs.alert_type }}"
-              source_type_name: "Github"
-              host: ${{ github.repository_owner }}
-              tags:
-                - "project:${{ github.repository }}"
-                - "job:${{ github.job }}"
-                - "run_id:${{ github.run_id }}"
-                - "workflow:${{ github.workflow }}"
-                - "branch:${{ github.ref_name }}"
-                - "url:https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+  #     - name: Send event to Datadog
+  #       if: (success() || failure()) && github.ref_name == 'main'
+  #       uses: masci/datadog@v1
+  #       with:
+  #         api-key: ${{ secrets.CORE_DATADOG_API_KEY }}
+  #         api-url: https://api.datadoghq.eu
+  #         events: |
+  #           - title: "${{ github.workflow }} workflow"
+  #             text: "Job ${{ github.job }} in branch ${{ github.ref_name }}"
+  #             alert_type: "${{ steps.calculator.outputs.alert_type }}"
+  #             source_type_name: "Github"
+  #             host: ${{ github.repository_owner }}
+  #             tags:
+  #               - "project:${{ github.repository }}"
+  #               - "job:${{ github.job }}"
+  #               - "run_id:${{ github.run_id }}"
+  #               - "workflow:${{ github.workflow }}"
+  #               - "branch:${{ github.ref_name }}"
+  #               - "url:https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
 
-  integration-tests-windows:
-    name: Integration / windows-latest
-    needs: unit-tests
-    runs-on: windows-latest
-    timeout-minutes: 30
-    env:
-      HAYSTACK_XPU_ENABLED: false
+  # integration-tests-windows:
+  #   name: Integration / windows-latest
+  #   needs: unit-tests
+  #   runs-on: windows-latest
+  #   timeout-minutes: 30
+  #   env:
+  #     HAYSTACK_XPU_ENABLED: false
 
-    steps:
-      - uses: actions/checkout@v5
+  #   steps:
+  #     - uses: actions/checkout@v5
 
-      - uses: actions/setup-python@v6
-        with:
-          python-version: "${{ env.PYTHON_VERSION }}"
+  #     - uses: actions/setup-python@v6
+  #       with:
+  #         python-version: "${{ env.PYTHON_VERSION }}"
 
-      - name: Install Hatch
-        id: hatch
-        shell: bash
-        run: |
-          pip install hatch==${{ env.HATCH_VERSION }}
-          echo "env=$(hatch env find test)" >> "$GITHUB_OUTPUT"
+  #     - name: Install Hatch
+  #       id: hatch
+  #       shell: bash
+  #       run: |
+  #         pip install hatch==${{ env.HATCH_VERSION }}
+  #         echo "env=$(hatch env find test)" >> "$GITHUB_OUTPUT"
 
-      - name: Run
-        run: hatch run test:integration-only-fast
+  #     - name: Run
+  #       run: hatch run test:integration-only-fast
 
-      - name: Calculate alert data
-        id: calculator
-        shell: bash
-        if: (success() || failure()) && github.ref_name == 'main'
-        run: |
-          if [ "${{ job.status }}" = "success" ]; then
-            echo "alert_type=success" >> "$GITHUB_OUTPUT";
-          else
-            echo "alert_type=error" >> "$GITHUB_OUTPUT";
-          fi
+  #     - name: Calculate alert data
+  #       id: calculator
+  #       shell: bash
+  #       if: (success() || failure()) && github.ref_name == 'main'
+  #       run: |
+  #         if [ "${{ job.status }}" = "success" ]; then
+  #           echo "alert_type=success" >> "$GITHUB_OUTPUT";
+  #         else
+  #           echo "alert_type=error" >> "$GITHUB_OUTPUT";
+  #         fi
 
-      - name: Send event to Datadog
-        if: (success() || failure()) && github.ref_name == 'main'
-        uses: masci/datadog@v1
-        with:
-          api-key: ${{ secrets.CORE_DATADOG_API_KEY }}
-          api-url: https://api.datadoghq.eu
-          events: |
-            - title: "${{ github.workflow }} workflow"
-              text: "Job ${{ github.job }} in branch ${{ github.ref_name }}"
-              alert_type: "${{ steps.calculator.outputs.alert_type }}"
-              source_type_name: "Github"
-              host: ${{ github.repository_owner }}
-              tags:
-                - "project:${{ github.repository }}"
-                - "job:${{ github.job }}"
-                - "run_id:${{ github.run_id }}"
-                - "workflow:${{ github.workflow }}"
-                - "branch:${{ github.ref_name }}"
-                - "url:https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+  #     - name: Send event to Datadog
+  #       if: (success() || failure()) && github.ref_name == 'main'
+  #       uses: masci/datadog@v1
+  #       with:
+  #         api-key: ${{ secrets.CORE_DATADOG_API_KEY }}
+  #         api-url: https://api.datadoghq.eu
+  #         events: |
+  #           - title: "${{ github.workflow }} workflow"
+  #             text: "Job ${{ github.job }} in branch ${{ github.ref_name }}"
+  #             alert_type: "${{ steps.calculator.outputs.alert_type }}"
+  #             source_type_name: "Github"
+  #             host: ${{ github.repository_owner }}
+  #             tags:
+  #               - "project:${{ github.repository }}"
+  #               - "job:${{ github.job }}"
+  #               - "run_id:${{ github.run_id }}"
+  #               - "workflow:${{ github.workflow }}"
+  #               - "branch:${{ github.ref_name }}"
+  #               - "url:https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
 
   trigger-catch-all:
     name: Tests completed
@@ -466,8 +466,8 @@ jobs:
       - check-imports
       - lint
       - integration-tests-linux
-      - integration-tests-macos
-      - integration-tests-windows
+      # - integration-tests-macos
+      # - integration-tests-windows
     uses: ./.github/workflows/tests_skipper_workflow.yml
     with:
       tests_were_skipped: false

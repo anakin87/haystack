@@ -49,7 +49,7 @@ jobs:
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v7
         with:
-          token: ${{ secrets.HAYSTACK_BOT_TOKEN }}
+          token: ${{ secrets.GITHUB_TOKEN }}
           commit-message: "Sync Haystack API reference on Docusaurus"
           branch: sync-docusaurus-api-reference
           base: main
