@@ -27,7 +27,13 @@ jobs:
         run: |
           OUTPUT=$(python3 .github/utils/parse_version.py "${{ inputs.version }}")
           echo "$OUTPUT" >> "$GITHUB_OUTPUT"
-          echo "$GITHUB_OUTPUT"
+
+      - name: Print outputs
+        run: |
+            echo "version=${{ steps.parse.outputs.version }}"
+            echo "release_branch=${{ steps.parse.outputs.release_branch }}"
+            echo "is_minor=${{ steps.parse.outputs.is_minor }}"
+            echo "is_first_rc=${{ steps.parse.outputs.is_first_rc }}"
 
 #   branch-off:
 #     if: needs.parse-version.outputs.is_first_rc == 'true'
