@@ -13,6 +13,7 @@ the corresponding rc0 version (e.g., 2.20.0-rc0).
 
 import sys
 
+
 def parse_version(version_input: str) -> dict[str, str]:
     """
     Parse version string and return parsed components.
