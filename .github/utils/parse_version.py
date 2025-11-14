@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 Parse version string and output parsed components.
 
@@ -11,6 +10,7 @@ This script parses a version string (e.g., "v2.99.0-rc1" or "2.99.0") and output
 If releasing the first RC (e.g., v2.20.0-rc1), validates that VERSION.txt contains
 the corresponding rc0 version (e.g., 2.20.0-rc0).
 """
+
 import sys
 from pathlib import Path
 
@@ -18,25 +18,25 @@ from pathlib import Path
 def parse_version(version_input: str) -> dict[str, str]:
     """
     Parse version string and return parsed components.
-    
+
     Args:
         version_input: Version string (e.g., "v2.99.0-rc1")
-        
+
     Returns:
         Dictionary with parsed version information
     """
-    version = version_input.lstrip('v')
-    
+    version = version_input.lstrip("v")
+
     # Parse version components
     # Format: MAJOR.MINOR.PATCH[-suffix]
-    parts = version.split('.')
+    parts = version.split(".")
     if len(parts) != 3:
         raise ValueError(f"Invalid version format: {version_input}. Expected MAJOR.MINOR.PATCH")
 
     major, minor, patch = parts
 
-    patch = patch.split('-')[0]
-    
+    patch = patch.split("-")[0]
+
     release_branch = f"v{major}.{minor}.x"
     is_minor = patch == "0"
     is_first_rc = is_minor and "rc1" in version
@@ -44,10 +44,12 @@ def parse_version(version_input: str) -> dict[str, str]:
     if is_first_rc:
         version_in_txt = Path("VERSION.txt").read_text().strip()
         if version_in_txt != f"{major}.{minor}.0-rc0":
-            msg = ("When releasing rc1 of a minor version, VERSION.txt must contain the corresponding rc0 version."
-                   f"Expected: {major}.{minor}.0-rc0, Got: {version_in_txt}")
+            msg = (
+                "When releasing rc1 of a minor version, VERSION.txt must contain the corresponding rc0 version."
+                f"Expected: {major}.{minor}.0-rc0, Got: {version_in_txt}"
+            )
             raise ValueError(msg)
-    
+
     return {
         "version": version,
         "release_branch": release_branch,
@@ -56,11 +58,11 @@ def parse_version(version_input: str) -> dict[str, str]:
     }
 
 
-
 def main():
-    
+    """Main entry point for the script."""
+
     version_input = sys.argv[1]
-    
+
     parsed = parse_version(version_input)
     for key, value in parsed.items():
         print(f"{key}={value}")
@@ -68,4 +70,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
