@@ -48,7 +48,8 @@ jobs:
         uses: actions/checkout@v5
         with:
           fetch-depth: 0
-          token: ${{ secrets.GITHUB_TOKEN }}
+          # needs a token with special permissions to trigger other workflows
+          token: ${{ secrets.PAT_TOKEN }}
 
       - name: Configure git
         run: |
