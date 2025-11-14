@@ -23,6 +23,7 @@ excludes = [
     "examples",
     "proposals",
     "releasenotes",
+    "reset.sh"
 ]
 
 [properties]
