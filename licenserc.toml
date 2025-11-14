@@ -17,6 +17,7 @@ excludes = [
     "*.yml",
     ".github",
     "CITATION.cff",
+    "reset.sh",
     "docker",
     "docs",
     "docs-website",
