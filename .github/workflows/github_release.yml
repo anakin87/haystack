@@ -31,13 +31,11 @@ jobs:
 
       - name: Generate release notes for release candidates - minor releases
         if: steps.version.outputs.current_pre_release != '' && endsWith(steps.version.outputs.current_release, '.0')
-        # env:
-        #   # When generating notes for release candidates of minor versions, pick every vX.Y.Z-rcN but
-        #   # stop when encounter vX.Y.Z-rc0. The -rc0 tag is added automatically when
-        #   # we create the release branch, so we can assume it's always there.
-        #   EARLIEST_VERSION: v${{ steps.version.outputs.current_release }}-rc0
         run: |
-          reno report --no-show-source --ignore-cache --version v${{ steps.version.outputs.current_release }}-${{ steps.version.outputs.current_pre_release }} -o relnotes.rst
+          # When generating notes for release candidates of minor versions, stop at rc0 of the next minor version.
+          # For example, if current release is v2.18.0-rcN, stop at v2.19.0-rc0
+          EARLIEST_VERSION=$(echo "${{ steps.version.outputs.current_release }}" | awk -F. '{printf "v%d.%d.0-rc0", $1, $2+1}')
+          reno report --no-show-source --ignore-cache --earliest-version "$EARLIEST_VERSION" --version v${{ steps.version.outputs.current_release }}-${{ steps.version.outputs.current_pre_release }} -o relnotes.rst
 
       - name: Generate release notes for release candidates - bugfix releases
         if: steps.version.outputs.current_pre_release != '' && !endsWith(steps.version.outputs.current_release, '.0')
