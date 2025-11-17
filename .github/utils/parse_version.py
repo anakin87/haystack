@@ -12,7 +12,6 @@ the corresponding rc0 version (e.g., 2.20.0-rc0).
 """
 
 import sys
-from pathlib import Path
 
 
 def parse_version(version_input: str) -> dict[str, str]:
@@ -39,6 +38,7 @@ def parse_version(version_input: str) -> dict[str, str]:
 
     release_branch = f"v{major}.{minor}.x"
     is_minor = patch == "0"
+    is_rc = "-rc" in version
     is_first_rc = is_minor and "rc1" in version
 
     # if is_first_rc:
@@ -56,6 +56,7 @@ def parse_version(version_input: str) -> dict[str, str]:
         "release_branch": release_branch,
         "is_minor": str(is_minor).lower(),
         "is_first_rc": str(is_first_rc).lower(),
+        "is_rc": str(is_rc).lower(),
     }
 
 
