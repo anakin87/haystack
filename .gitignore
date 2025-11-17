@@ -3,6 +3,7 @@ qa.db
 **/qa.db
 **/*qa*.db
 **/test-reports
+reset.sh
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
