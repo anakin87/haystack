@@ -35,7 +35,7 @@ jobs:
           # When generating notes for release candidates of minor versions, stop at rc0 of the next minor version.
           # For example, if current release is v2.18.0-rcN, stop at v2.19.0-rc0
           EARLIEST_VERSION=$(echo "${{ steps.version.outputs.current_release }}" | awk -F. '{printf "v%d.%d.0-rc0", $1, $2+1}')
-          reno report --no-show-source --ignore-cache --earliest-version "$EARLIEST_VERSION" --version v${{ steps.version.outputs.current_release }}-${{ steps.version.outputs.current_pre_release }} -o relnotes.rst
+          reno report --no-show-source --ignore-cache --earliest-version "$EARLIEST_VERSION" -o relnotes.rst
 
       - name: Generate release notes for release candidates - bugfix releases
         if: steps.version.outputs.current_pre_release != '' && !endsWith(steps.version.outputs.current_release, '.0')
