@@ -54,7 +54,7 @@ jobs:
         # When generating notes for the final release vX.Y.Z, we just pass --version and reno
         # will automatically collapse all the vX.Y.Z-rcN.
         run: |
-          reno report --no-show-source --ignore-cache --version v${{ steps.version.outputs.current_release }} -o relnotes.rst
+          reno report --no-show-source --ignore-cache --version v${{ steps.version.outputs.current_release }} --earliest-version v${{ steps.version.outputs.current_release }}-rc1 -o relnotes.rst
 
       - name: Convert to Markdown
         uses: docker://pandoc/core:3.8
