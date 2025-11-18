@@ -56,6 +56,12 @@ jobs:
           NEW_VERSION=$(awk -F. '/[0-9]+\./{$2++;print}' OFS=. < VERSION.txt)
           echo "$NEW_VERSION" > VERSION.txt
 
+          # !!! This is not needed in Haystack since merged PRs are deleted.
+          # Delete any existing bump-version branch (local and remote)
+          git branch -D bump-version || true
+          git push origin --delete bump-version || true
+          # !!!
+
           # Create the branch that bumps version in dev branch
           git checkout -b bump-version
           git add .
