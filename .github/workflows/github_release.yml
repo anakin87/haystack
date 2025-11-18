@@ -38,12 +38,12 @@ jobs:
           PREV_RELEASE_TAG="v${PREV_MINOR}.0"
           CURRENT_RC0_TAG="v${{ steps.version.outputs.current_release }}-rc0"
 
-          # Create temporary local tag for previous release at current release's rc0
-          # This tells reno that the previous release ended where the current release started
+          # Create temporary local tag for previous release at the commit BEFORE current release's rc0
+          # This tells reno that the previous release ended just before the current release started
           git tag -d "$PREV_RELEASE_TAG" 2>/dev/null || true
           if git rev-parse "$CURRENT_RC0_TAG" >/dev/null 2>&1; then
-            git tag "$PREV_RELEASE_TAG" "$CURRENT_RC0_TAG"
-            echo "Created temporary tag $PREV_RELEASE_TAG at $CURRENT_RC0_TAG for reno"
+            git tag "$PREV_RELEASE_TAG" "${CURRENT_RC0_TAG}~1"
+            echo "Created temporary tag $PREV_RELEASE_TAG at commit before $CURRENT_RC0_TAG for reno"
           fi
 
       - name: Generate release notes for release candidates
