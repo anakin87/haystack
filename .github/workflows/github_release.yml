@@ -29,33 +29,41 @@ jobs:
           python -m pip install --upgrade pip
           pip install "reno<5"
 
-      - name: Generate release notes for release candidates - minor releases
-        if: steps.version.outputs.current_pre_release != '' && endsWith(steps.version.outputs.current_release, '.0')
-        env:
-          # When generating notes for release candidates of minor versions, pick every vX.Y.Z-rcN but
-          # stop when encounter vX.Y.Z-rc0. The -rc0 tag is added automatically when
-          # we create the release branch, so we can assume it's always there.
-          EARLIEST_VERSION: v${{ steps.version.outputs.current_release }}-rc0
+      - name: Create temporary tag for previous release
         run: |
-          reno report --no-show-source --ignore-cache --earliest-version "$EARLIEST_VERSION" -o relnotes.rst
+          # Extract X.Y from current version (e.g., "2.21.0" -> "2.21")
+          CURRENT_MINOR=$(echo "${{ steps.version.outputs.current_release }}" | cut -d. -f1,2)
+          # Calculate previous minor version (e.g., "2.21" -> "2.20")
+          PREV_MINOR=$(echo "$CURRENT_MINOR" | awk -F. '{print $1"."$2-1}')
+          PREV_RELEASE_TAG="v${PREV_MINOR}.0"
+          CURRENT_RC0_TAG="v${{ steps.version.outputs.current_release }}-rc0"
 
-      - name: Generate release notes for release candidates - bugfix releases
-        if: steps.version.outputs.current_pre_release != '' && !endsWith(steps.version.outputs.current_release, '.0')
+          # Create temporary local tag for previous release at current release's rc0
+          # This tells reno that the previous release ended where the current release started
+          git tag -d "$PREV_RELEASE_TAG" 2>/dev/null || true
+          if git rev-parse "$CURRENT_RC0_TAG" >/dev/null 2>&1; then
+            git tag "$PREV_RELEASE_TAG" "$CURRENT_RC0_TAG"
+            echo "Created temporary tag $PREV_RELEASE_TAG at $CURRENT_RC0_TAG for reno"
+          fi
+
+      - name: Generate release notes for release candidates
+        if: steps.version.outputs.current_pre_release != ''
         env:
-          # When generating notes for release candidates of bugfix releases, pick every vX.Y.Z-rcN but
-          # stop when encounter vX.Y.Z-rc1.
-          # In this case, we don't have the -rc0 tag, because we don't need to go through commits on main,
-          # as we cherry-pick them into the release branch.
+          # Use vX.Y.Z-rc1 as the boundary to avoid including notes from previous releases.
+          # The vX.Y.Z-rc0 tag exists in history but includes commits from the previous release cycle,
+          # so starting from rc1 ensures we only get notes for the current release.
           EARLIEST_VERSION: v${{ steps.version.outputs.current_release }}-rc1
         run: |
           reno report --no-show-source --ignore-cache --earliest-version "$EARLIEST_VERSION" -o relnotes.rst
 
-      - name: Generate release notes for the final release
+      - name: Generate release notes for final release
         if: steps.version.outputs.current_pre_release == ''
-        # When generating notes for the final release vX.Y.Z, we just pass --version and reno
-        # will automatically collapse all the vX.Y.Z-rcN.
+        env:
+          # Use --version to collapse all vX.Y.Z-rcN notes into the final vX.Y.Z release.
+          # Use rc1 as earliest-version (not rc0) to avoid including notes from previous releases.
+          EARLIEST_VERSION: v${{ steps.version.outputs.current_release }}-rc1
         run: |
-          reno report --no-show-source --ignore-cache --version v${{ steps.version.outputs.current_release }} -o relnotes.rst
+          reno report --no-show-source --ignore-cache --version v${{ steps.version.outputs.current_release }} --earliest-version "$EARLIEST_VERSION" -o relnotes.rst
 
       - name: Convert to Markdown
         uses: docker://pandoc/core:3.8
@@ -68,7 +76,6 @@ jobs:
           cat relnotes.md > enhanced_relnotes.md
 
       - name: Add contributor list
-          # only for minor releases and minor release candidates (not bugfix releases)
         if: endsWith(steps.version.outputs.current_release, '.0')
         env:
           GH_TOKEN: ${{ github.token }}
@@ -81,7 +88,7 @@ jobs:
             | sort_by(ascii_downcase)
             | map("@\(.)")
             | join(", ")'
-          CONTRIBUTORS=$(gh api "repos/deepset-ai/haystack/compare/$START...$END" \
+          CONTRIBUTORS=$(gh api "repos/anakin87/haystack/compare/$START...$END" \
             --jq "$JQ_EXPR") || { echo "Unable to fetch contributors"; exit 1; }
 
           {
