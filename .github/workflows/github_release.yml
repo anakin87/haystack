@@ -35,7 +35,7 @@ jobs:
           # When generating notes for release candidates of minor versions, pick every vX.Y.Z-rcN but
           # stop when encounter vX.Y.Z-rc0. The -rc0 tag is added automatically when
           # we create the release branch, so we can assume it's always there.
-          EARLIEST_VERSION: v${{ steps.version.outputs.current_release }}-rc0
+          EARLIEST_VERSION: v${{ steps.version.outputs.current_release }}-rc1
         run: |
           reno report --no-show-source --ignore-cache --earliest-version "$EARLIEST_VERSION" -o relnotes.rst
 
@@ -54,8 +54,10 @@ jobs:
         if: steps.version.outputs.current_pre_release == ''
         # When generating notes for the final release vX.Y.Z, we just pass --version and reno
         # will automatically collapse all the vX.Y.Z-rcN.
+        env:
+          EARLIEST_VERSION: v${{ steps.version.outputs.current_release }}
         run: |
-          reno report --no-show-source --ignore-cache --version v${{ steps.version.outputs.current_release }} -o relnotes.rst
+          reno report --no-show-source --ignore-cache --version v${{ steps.version.outputs.current_release }}  --earliest-version "$EARLIEST_VERSION" -o relnotes.rst
 
       - name: Convert to Markdown
         uses: docker://pandoc/core:3.8
