@@ -50,28 +50,33 @@ jobs:
           git checkout -b v${{ steps.versions.outputs.current_release_minor }}.x
           git push -u origin v${{ steps.versions.outputs.current_release_minor }}.x
 
-          # Tag the base with X.Y.Z-rc0.
-          # At this point VERSION.txt still contains the previous version and not
-          # the one specified by the tag.
-          # This is good though as we just need this to make reno work properly.
+          # Go back to main to prepare version bump
+          git checkout main
+
+          # Bump VERSION.txt to X.Y.Z for the next release cycle
           NEW_VERSION=$(awk -F. '/[0-9]+\./{$2++;print}' OFS=. < VERSION.txt)
           echo "$NEW_VERSION" > VERSION.txt
-          VERSION_TAG="v$NEW_VERSION"
-          git tag "$VERSION_TAG" -m"$VERSION_TAG"
-          git push --tags
 
-          # Create the branch that bump version in dev branch
-          cat VERSION.txt
-          git checkout -b bump-version
-          git add .
+          # Commit the version change locally (not pushed yet)
+          git add VERSION.txt
           git commit -m "Update unstable version to $NEW_VERSION"
+
+          # Tag this commit with X.Y.Z-rc0
+          VERSION_TAG="v$NEW_VERSION"
+          git tag -a "$VERSION_TAG" -m "$VERSION_TAG"
+
+          # Push the tag (this can be pushed even though the commit isn't on any branch yet)
+          git push origin "$VERSION_TAG"
+
+          # Now create a PR with the same change
+          git checkout -b bump-version
           git push -u origin bump-version
 
           # Create the PR
           gh pr create -B main \
             -H bump-version \
-            --title "Bump unstable version" \
-            --body "This PR bumps the unstable version for \`v2.x\`. \
+            --title "Bump unstable version to $NEW_VERSION" \
+            --body "This PR bumps the unstable version for \`v2.x\` to **$NEW_VERSION**. \
           The release branch \`v${{ steps.versions.outputs.current_release_minor }}.x\` has been correctly created. \
           Verify documentation on Readme has been correctly updated before approving and merging this PR." \
             --label "ignore-for-release-notes"
