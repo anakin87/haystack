@@ -46,24 +46,33 @@ jobs:
             echo "Created temporary tag $PREV_RELEASE_TAG at commit before $CURRENT_RC0_TAG for reno"
           fi
 
-      - name: Generate release notes for release candidates
-        if: steps.version.outputs.current_pre_release != ''
+      - name: Generate release notes for release candidates - minor releases
+        if: steps.version.outputs.current_pre_release != '' && endsWith(steps.version.outputs.current_release, '.0')
         env:
-          # Use vX.Y.Z-rc1 as the boundary to avoid including notes from previous releases.
-          # The vX.Y.Z-rc0 tag exists in history but includes commits from the previous release cycle,
-          # so starting from rc1 ensures we only get notes for the current release.
+          # When generating notes for release candidates of minor versions, pick every vX.Y.Z-rcN but
+          # stop when encounter vX.Y.Z-rc0. The -rc0 tag is added automatically when
+          # we create the release branch, so we can assume it's always there.
+          EARLIEST_VERSION: v${{ steps.version.outputs.current_release }}-rc0
+        run: |
+          reno report --no-show-source --ignore-cache --earliest-version "$EARLIEST_VERSION" -o relnotes.rst
+
+      - name: Generate release notes for release candidates - bugfix releases
+        if: steps.version.outputs.current_pre_release != '' && !endsWith(steps.version.outputs.current_release, '.0')
+        env:
+          # When generating notes for release candidates of bugfix releases, pick every vX.Y.Z-rcN but
+          # stop when encounter vX.Y.Z-rc1.
+          # In this case, we don't have the -rc0 tag, because we don't need to go through commits on main,
+          # as we cherry-pick them into the release branch.
           EARLIEST_VERSION: v${{ steps.version.outputs.current_release }}-rc1
         run: |
           reno report --no-show-source --ignore-cache --earliest-version "$EARLIEST_VERSION" -o relnotes.rst
 
-      - name: Generate release notes for final release
+      - name: Generate release notes for the final release
         if: steps.version.outputs.current_pre_release == ''
-        env:
-          # Use --version to collapse all vX.Y.Z-rcN notes into the final vX.Y.Z release.
-          # Use rc1 as earliest-version (not rc0) to avoid including notes from previous releases.
-          EARLIEST_VERSION: v${{ steps.version.outputs.current_release }}-rc1
+        # When generating notes for the final release vX.Y.Z, we just pass --version and reno
+        # will automatically collapse all the vX.Y.Z-rcN.
         run: |
-          reno report --no-show-source --ignore-cache --version v${{ steps.version.outputs.current_release }} --earliest-version "$EARLIEST_VERSION" -o relnotes.rst
+          reno report --no-show-source --ignore-cache --version v${{ steps.version.outputs.current_release }} -o relnotes.rst
 
       - name: Convert to Markdown
         uses: docker://pandoc/core:3.8
