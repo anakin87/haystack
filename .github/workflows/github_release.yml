@@ -35,7 +35,7 @@ jobs:
         # When generating notes for release candidates of minor versions, pick every vX.Y.Z-rcN but
         # stop when encounter vX.Y.Z-rc0. The -rc0 tag is added automatically when
         # we create the release branch, so we can assume it's always there.
-        EARLIEST_VERSION: v${{ steps.version.outputs.current_release }}-rc0
+          EARLIEST_VERSION: v${{ steps.version.outputs.current_release }}-rc0
         run: |
           reno report --no-show-source --ignore-cache --earliest-version "$EARLIEST_VERSION" -o relnotes.rst
 
