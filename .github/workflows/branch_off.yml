@@ -46,7 +46,14 @@ jobs:
 
           git checkout main
 
-          # Create the release branch from the current unstable
+          # Tag the commit where we branch off as "<version>-rc0" (e.g. v2.21.0-rc0).
+          # This serves as the "Stop Point" for reno when generating notes for this release.
+          CURRENT_TAG="v${{ steps.versions.outputs.current_release_minor }}.0-rc0"
+          git tag -m"$CURRENT_TAG" "$CURRENT_TAG"
+          git push origin "$CURRENT_TAG"
+
+          
+          # Create the release branch from this tagged point
           git checkout -b v${{ steps.versions.outputs.current_release_minor }}.x
           git push -u origin v${{ steps.versions.outputs.current_release_minor }}.x
 
@@ -61,10 +68,10 @@ jobs:
           git add .
           git commit -m "Update unstable version to $NEW_VERSION"
           
-          # Tag the commit that updates the version
-          git tag "$VERSION_TAG" -m"$VERSION_TAG"
+          # We do NOT tag the future version here to avoid confusion and collisions.
+          # The version bump in VERSION.txt is sufficient to track the start of the next cycle.
+          
           git push -u origin bump-version
-          git push --tags
 
           # Create the PR
           gh pr create -B main \
