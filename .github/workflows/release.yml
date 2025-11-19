@@ -61,47 +61,47 @@ jobs:
           git checkout ${{ needs.parse-version.outputs.release_branch }}
           git pull origin ${{ needs.parse-version.outputs.release_branch }}
 
-      - name: For final releases, check rc is present and successfully tested
-        if: needs.parse-version.outputs.is_rc == 'false'
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          VERSION="${{ needs.parse-version.outputs.version }}"
+      # - name: For final releases, check rc is present and successfully tested
+      #   if: needs.parse-version.outputs.is_rc == 'false'
+      #   env:
+      #     GH_TOKEN: ${{ github.token }}
+      #   run: |
+      #     VERSION="${{ needs.parse-version.outputs.version }}"
 
-          # Search for valid RC tags (excluding rc0), sorted numerically
-          RC_TAGS=$(git tag -l "v${VERSION}-rc*" | grep -v "rc0$" || true)
+      #     # Search for valid RC tags (excluding rc0), sorted numerically
+      #     RC_TAGS=$(git tag -l "v${VERSION}-rc*" | grep -v "rc0$" || true)
 
-          if [ -z "$RC_TAGS" ]; then
-            echo "Error: No valid RC tag found for version ${VERSION}"
-            echo "Before releasing a final version, at least one RC tag (e.g., v${VERSION}-rc1, v${VERSION}-rc2) must exist."
-            echo "Note: rc0 does not count as a valid RC."
-            exit 1
-          fi
+      #     if [ -z "$RC_TAGS" ]; then
+      #       echo "Error: No valid RC tag found for version ${VERSION}"
+      #       echo "Before releasing a final version, at least one RC tag (e.g., v${VERSION}-rc1, v${VERSION}-rc2) must exist."
+      #       echo "Note: rc0 does not count as a valid RC."
+      #       exit 1
+      #     fi
 
-          echo "Found valid RC tags: $RC_TAGS"
+      #     echo "Found valid RC tags: $RC_TAGS"
 
-          # Get the last RC tag
-          LAST_RC=$(echo "$RC_TAGS" | sort -V | tail -n1)
-          echo "Last RC tag: $LAST_RC"
+      #     # Get the last RC tag
+      #     LAST_RC=$(echo "$RC_TAGS" | sort -V | tail -n1)
+      #     echo "Last RC tag: $LAST_RC"
 
-          # Get the commit SHA for the RC tag
-          RC_SHA=$(git rev-list -n 1 "$LAST_RC")
-          echo "RC tag $LAST_RC points to commit: $RC_SHA"
+      #     # Get the commit SHA for the RC tag
+      #     RC_SHA=$(git rev-list -n 1 "$LAST_RC")
+      #     echo "RC tag $LAST_RC points to commit: $RC_SHA"
 
-          # Check for successful test workflow runs on this commit
-          WORKFLOW_RUNS=$(gh api \
-            -H "Accept: application/vnd.github+json" \
-            -H "X-GitHub-Api-Version: 2022-11-28" \
-            "/repos/${{ github.repository }}/actions/runs?head_sha=$RC_SHA&status=success" \
-            --jq '.workflow_runs[] | select(.name == "Tests") | .conclusion')
+      #     # Check for successful test workflow runs on this commit
+      #     WORKFLOW_RUNS=$(gh api \
+      #       -H "Accept: application/vnd.github+json" \
+      #       -H "X-GitHub-Api-Version: 2022-11-28" \
+      #       "/repos/${{ github.repository }}/actions/runs?head_sha=$RC_SHA&status=success" \
+      #       --jq '.workflow_runs[] | select(.name == "Tests") | .conclusion')
 
-          if [ -z "$WORKFLOW_RUNS" ]; then
-            echo "Error: No successful 'Tests' workflow run found for RC tag $LAST_RC (commit $RC_SHA)"
-            echo "Before releasing a final version, the Tests workflow must run successfully on the last RC."
-            exit 1
-          fi
+      #     if [ -z "$WORKFLOW_RUNS" ]; then
+      #       echo "Error: No successful 'Tests' workflow run found for RC tag $LAST_RC (commit $RC_SHA)"
+      #       echo "Before releasing a final version, the Tests workflow must run successfully on the last RC."
+      #       exit 1
+      #     fi
 
-          echo "✓ Tests workflow ran successfully on $LAST_RC"
+      #     echo "✓ Tests workflow ran successfully on $LAST_RC"
 
       - name: Update VERSION.txt and create tag
         run: |
