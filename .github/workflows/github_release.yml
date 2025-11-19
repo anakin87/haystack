@@ -24,6 +24,22 @@ jobs:
           echo "current_release=$(awk -F \\- '{print $1}' < VERSION.txt)" >> "$GITHUB_OUTPUT"
           echo "current_pre_release=$(awk -F \\- '{print $2}' < VERSION.txt)" >> "$GITHUB_OUTPUT"
 
+      - name: Delete next version tag
+        if: endsWith(steps.version.outputs.current_release, '.0')
+        run: |
+          # Parse version X.Y.Z and increment Y for next minor version
+          IFS='.' read -r MAJOR MINOR PATCH <<< "${{ steps.version.outputs.current_release }}"
+          NEXT_MINOR=$((MINOR + 1))
+          NEXT_TAG="v${MAJOR}.${NEXT_MINOR}.0-rc0"
+          
+          if git rev-parse --verify "$NEXT_TAG" >/dev/null 2>&1; then
+            git tag -d "$NEXT_TAG"
+            echo "Deleted local tag $NEXT_TAG"
+          else
+            echo "Tag $NEXT_TAG does not exist locally"
+          fi
+
+
       - name: Install reno
         run: |
           python -m pip install --upgrade pip
@@ -35,7 +51,7 @@ jobs:
           # When generating notes for release candidates of minor versions, pick every vX.Y.Z-rcN but
           # stop when encounter vX.Y.Z-rc0. The -rc0 tag is added automatically when
           # we create the release branch, so we can assume it's always there.
-          EARLIEST_VERSION: v${{ steps.version.outputs.current_release }}-rc0
+          EARLIEST_VERSION: v${{ steps.version.outputs.current_release }}-rc1
         run: |
           reno report --no-show-source --ignore-cache --earliest-version "$EARLIEST_VERSION" -o relnotes.rst
 
@@ -54,8 +70,13 @@ jobs:
         if: steps.version.outputs.current_pre_release == ''
         # When generating notes for the final release vX.Y.Z, we just pass --version and reno
         # will automatically collapse all the vX.Y.Z-rcN.
+        env:
+          # When generating notes for release candidates of minor versions, pick every vX.Y.Z-rcN but
+          # stop when encounter vX.Y.Z-rc0. The -rc0 tag is added automatically when
+          # we create the release branch, so we can assume it's always there.
+          EARLIEST_VERSION: v${{ steps.version.outputs.current_release }}-rc1        
         run: |
-          reno report --no-show-source --ignore-cache --version v${{ steps.version.outputs.current_release }} -o relnotes.rst
+          reno report --no-show-source --ignore-cache --version v${{ steps.version.outputs.current_release }} --earliest-version "$EARLIEST_VERSION" -o relnotes.rst
 
       - name: Convert to Markdown
         uses: docker://pandoc/core:3.8
@@ -81,7 +102,7 @@ jobs:
             | sort_by(ascii_downcase)
             | map("@\(.)")
             | join(", ")'
-          CONTRIBUTORS=$(gh api "repos/deepset-ai/haystack/compare/$START...$END" \
+          CONTRIBUTORS=$(gh api "repos/anakin87/haystack/compare/$START...$END" \
             --jq "$JQ_EXPR") || { echo "Unable to fetch contributors"; exit 1; }
 
           {
