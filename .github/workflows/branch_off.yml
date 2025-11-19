@@ -50,11 +50,11 @@ jobs:
           # This serves as the "Stop Point" for reno when generating notes for this release.
           # only if it doesn't exist yet
           CURRENT_TAG="v${{ steps.versions.outputs.current_release_minor }}.0-rc0"
-          if ! git rev-parse "$CURRENT_TAG" >/dev/null 2>&1; then
-            git tag -m"$CURRENT_TAG" "$CURRENT_TAG"
+          if ! git ls-remote --exit-code --tags origin "$CURRENT_TAG" >/dev/null 2>&1; then
+            git tag -m"$CURRENT_TAG" "$CURRENT_TAG" 2>/dev/null || true
             git push origin "$CURRENT_TAG"
           else
-            echo "Tag $CURRENT_TAG already exists. Skipping creation."
+            echo "Tag $CURRENT_TAG already exists on remote. Skipping creation."
           fi
 
           
