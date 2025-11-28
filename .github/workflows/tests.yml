@@ -131,33 +131,33 @@ jobs:
       #           - "branch:${{ github.ref_name }}"
       #           - "url:https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
 
-  # unit-tests:
-  #   name: Unit / ${{ matrix.os }}
-  #   timeout-minutes: 30
-  #   strategy:
-  #     fail-fast: false
-  #     matrix:
-  #       os:
-  #         - ubuntu-latest
-  #         # - windows-latest
-  #         # - macos-latest
-  #   runs-on: ${{ matrix.os }}
-  #   steps:
-  #     - uses: actions/checkout@v5
+  unit-tests:
+    name: Unit / ${{ matrix.os }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-latest
+          # - windows-latest
+          # - macos-latest
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v5
 
-  #     - uses: actions/setup-python@v6
-  #       with:
-  #         python-version: "${{ env.PYTHON_VERSION }}"
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "${{ env.PYTHON_VERSION }}"
 
-  #     - name: Install Hatch
-  #       id: hatch
-  #       shell: bash
-  #       run: |
-  #         pip install hatch==${{ env.HATCH_VERSION }}
-  #         echo "env=$(hatch env find test)" >> "$GITHUB_OUTPUT"
+      - name: Install Hatch
+        id: hatch
+        shell: bash
+        run: |
+          pip install hatch==${{ env.HATCH_VERSION }}
+          echo "env=$(hatch env find test)" >> "$GITHUB_OUTPUT"
 
-  #     - name: Run
-  #       run: hatch run test:unit
+      - name: Run
+        run: hatch run test:unit
 
   #     - uses: actions/cache/save@v4
   #       id: cache
@@ -461,6 +461,7 @@ jobs:
     needs:
       - check-imports
       - lint
+      - unit-tests
       # - integration-tests-linux
       # - integration-tests-macos
       # - integration-tests-windows
