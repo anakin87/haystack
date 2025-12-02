@@ -90,7 +90,7 @@ jobs:
 
       - name: Check GitHub Release
         run: |
-          gh api "repos/${{ github.repository }}/releases/tags/v${{ env.PLACEHOLDER_VERSION }}" > /dev/null || {
+          gh api "repos/deepset-ai/haystack/releases/tags/v${{ env.PLACEHOLDER_VERSION }}" > /dev/null || {
             echo "❌ GitHub Release not found"
             exit 1
           }

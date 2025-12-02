@@ -16,19 +16,12 @@ WORKFLOWS=("$@")
 MAX_ATTEMPTS=40
 SLEEP_SECONDS=30
 
-# Get tag SHA (dereference annotated tags to get commit SHA)
-TAG_REF=$(gh api "repos/${GITHUB_REPOSITORY}/git/refs/tags/${TAG}") || {
+# Get commit SHA from tag (fetch tag first to ensure it's available)
+git fetch origin "refs/tags/${TAG}:refs/tags/${TAG}" 2>/dev/null || {
     echo "❌ Tag ${TAG} not found"
     exit 1
 }
-
-TAG_TYPE=$(echo "$TAG_REF" | jq -r '.object.type')
-TAG_SHA=$(echo "$TAG_REF" | jq -r '.object.sha')
-
-# If it's an annotated tag, we need to dereference to get the commit SHA
-if [[ "$TAG_TYPE" == "tag" ]]; then
-    TAG_SHA=$(gh api "repos/${GITHUB_REPOSITORY}/git/tags/${TAG_SHA}" --jq '.object.sha')
-fi
+TAG_SHA=$(git rev-list -n 1 "${TAG}")
 
 echo "Tag ${TAG} (commit: ${TAG_SHA:0:7})"
 echo ""
