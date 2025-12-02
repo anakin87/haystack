@@ -68,3 +68,60 @@ jobs:
           TAG="v${{ needs.parse-validate-version.outputs.version }}"
           git tag -m "$TAG" "$TAG"
           git push origin "$TAG"
+
+  check-artifacts:
+    needs: ["parse-validate-version", "release"]
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+      # TODO: Remove this hardcoded version once testing on the main repo.
+      # On the fork, we can't push real releases, so we use an existing version for testing.
+      # In production, use: VERSION: ${{ needs.parse-validate-version.outputs.version }}
+      VERSION: "2.19.0"
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Wait for release workflows
+        run: |
+          .github/utils/wait_for_release_workflows.sh "v${{ env.VERSION }}" \
+            "Project release on PyPi" \
+            "Project release on Github" \
+            "Docker image release"
+
+      - name: Check GitHub Release
+        run: |
+          gh api "repos/${{ github.repository }}/releases/tags/v${{ env.VERSION }}" > /dev/null || {
+            echo "❌ GitHub Release not found"
+            exit 1
+          }
+          echo "✅ GitHub Release exists"
+
+      - name: Check PyPI
+        run: |
+          curl -sf "https://pypi.org/pypi/haystack-ai/${{ env.VERSION }}/json" > /dev/null || {
+            echo "❌ PyPI package not found"
+            exit 1
+          }
+          echo "✅ PyPI package exists"
+
+      - name: Check Docker Hub
+        run: |
+          curl -sf "https://hub.docker.com/v2/repositories/deepset/haystack/tags/base-v${{ env.VERSION }}" > /dev/null || {
+            echo "❌ Docker image not found"
+            exit 1
+          }
+          echo "✅ Docker image exists"
+
+      - name: Summary
+        run: |
+          echo ""
+          echo "=========================================="
+          echo "🎉 Release v${{ env.VERSION }} verified!"
+          echo "=========================================="
+          echo ""
+          echo "📦 Artifacts:"
+          echo "   • GitHub: https://github.com/${{ github.repository }}/releases/tag/v${{ env.VERSION }}"
+          echo "   • PyPI:   https://pypi.org/project/haystack-ai/${{ env.VERSION }}/"
+          echo "   • Docker: https://hub.docker.com/r/deepset/haystack/tags?name=base-v${{ env.VERSION }}"
+          echo ""
