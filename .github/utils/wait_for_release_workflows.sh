@@ -16,12 +16,21 @@ WORKFLOWS=("$@")
 MAX_ATTEMPTS=40
 SLEEP_SECONDS=30
 
-# Get tag SHA
-TAG_SHA=$(gh api "repos/${GITHUB_REPOSITORY}/git/refs/tags/${TAG}" --jq '.object.sha') || {
+# Get tag SHA (dereference annotated tags to get commit SHA)
+TAG_REF=$(gh api "repos/${GITHUB_REPOSITORY}/git/refs/tags/${TAG}") || {
     echo "❌ Tag ${TAG} not found"
     exit 1
 }
-echo "Tag ${TAG} (SHA: ${TAG_SHA:0:7})"
+
+TAG_TYPE=$(echo "$TAG_REF" | jq -r '.object.type')
+TAG_SHA=$(echo "$TAG_REF" | jq -r '.object.sha')
+
+# If it's an annotated tag, we need to dereference to get the commit SHA
+if [[ "$TAG_TYPE" == "tag" ]]; then
+    TAG_SHA=$(gh api "repos/${GITHUB_REPOSITORY}/git/tags/${TAG_SHA}" --jq '.object.sha')
+fi
+
+echo "Tag ${TAG} (commit: ${TAG_SHA:0:7})"
 echo ""
 
 wait_for_workflow() {
