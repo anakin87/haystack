@@ -74,10 +74,9 @@ jobs:
     runs-on: ubuntu-latest
     env:
       GH_TOKEN: ${{ github.token }}
-      # TODO: Remove this hardcoded version once testing on the main repo.
-      # On the fork, we can't push real releases, so we use an existing version for testing.
-      # In production, use: VERSION: ${{ needs.parse-validate-version.outputs.version }}
-      VERSION: "2.19.0"
+      VERSION: ${{ needs.parse-validate-version.outputs.version }}
+      # TODO: Remove this hardcoded version once testing on the main repo
+      PLACEHOLDER_VERSION: "2.19.0"
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
@@ -91,7 +90,7 @@ jobs:
 
       - name: Check GitHub Release
         run: |
-          gh api "repos/${{ github.repository }}/releases/tags/v${{ env.VERSION }}" > /dev/null || {
+          gh api "repos/${{ github.repository }}/releases/tags/v${{ env.PLACEHOLDER_VERSION }}" > /dev/null || {
             echo "❌ GitHub Release not found"
             exit 1
           }
@@ -99,7 +98,7 @@ jobs:
 
       - name: Check PyPI
         run: |
-          curl -sf "https://pypi.org/pypi/haystack-ai/${{ env.VERSION }}/json" > /dev/null || {
+          curl -sf "https://pypi.org/pypi/haystack-ai/${{ env.PLACEHOLDER_VERSION }}/json" > /dev/null || {
             echo "❌ PyPI package not found"
             exit 1
           }
@@ -107,7 +106,7 @@ jobs:
 
       - name: Check Docker Hub
         run: |
-          curl -sf "https://hub.docker.com/v2/repositories/deepset/haystack/tags/base-v${{ env.VERSION }}" > /dev/null || {
+          curl -sf "https://hub.docker.com/v2/repositories/deepset/haystack/tags/base-v${{ env.PLACEHOLDER_VERSION }}" > /dev/null || {
             echo "❌ Docker image not found"
             exit 1
           }
@@ -117,11 +116,11 @@ jobs:
         run: |
           echo ""
           echo "=========================================="
-          echo "🎉 Release v${{ env.VERSION }} verified!"
+          echo "🎉 Release v${{ env.PLACEHOLDER_VERSION }} verified!"
           echo "=========================================="
           echo ""
           echo "📦 Artifacts:"
-          echo "   • GitHub: https://github.com/${{ github.repository }}/releases/tag/v${{ env.VERSION }}"
-          echo "   • PyPI:   https://pypi.org/project/haystack-ai/${{ env.VERSION }}/"
-          echo "   • Docker: https://hub.docker.com/r/deepset/haystack/tags?name=base-v${{ env.VERSION }}"
+          echo "   • GitHub: https://github.com/${{ github.repository }}/releases/tag/v${{ env.PLACEHOLDER_VERSION }}"
+          echo "   • PyPI:   https://pypi.org/project/haystack-ai/${{ env.PLACEHOLDER_VERSION }}/"
+          echo "   • Docker: https://hub.docker.com/r/deepset/haystack/tags?name=base-v${{ env.PLACEHOLDER_VERSION }}"
           echo ""
