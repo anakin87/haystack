@@ -16,12 +16,11 @@ WORKFLOWS=("$@")
 MAX_ATTEMPTS=40
 SLEEP_SECONDS=30
 
-# Get commit SHA from tag (fetch tag first to ensure it's available)
-git fetch origin "refs/tags/${TAG}:refs/tags/${TAG}" 2>/dev/null || {
+# Get commit SHA from tag
+TAG_SHA=$(git rev-list -n 1 "${TAG}" 2>/dev/null) || {
     echo "❌ Tag ${TAG} not found"
     exit 1
 }
-TAG_SHA=$(git rev-list -n 1 "${TAG}")
 
 echo "Tag ${TAG} (commit: ${TAG_SHA:0:7})"
 echo ""
