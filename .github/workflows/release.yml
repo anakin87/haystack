@@ -72,6 +72,7 @@ jobs:
 
   check-artifacts:
     needs: ["parse-validate-version", "release"]
+    if: always() && needs.parse-validate-version.result == 'success' && needs.release.result == 'success'
     runs-on: ubuntu-latest
     outputs:
       github_url: ${{ steps.set-outputs.outputs.github_url }}
