@@ -164,15 +164,22 @@ jobs:
             {
               echo "alert_type=success"
               echo "title=Release ${VERSION} completed successfully"
+              if [[ "${{ needs.parse-validate-version.outputs.is_rc }}" == "true" ]]; then
+                echo "released_rc=true"
+              fi
             } >> "$GITHUB_OUTPUT"
             {
               echo 'event_text<<EOF'
-              echo "🎉 Release ${VERSION} completed successfully!"
+              echo "Release ${VERSION} completed successfully"
+              echo ""
               echo ""
               echo "📦 Artifacts:"
-              echo "• GitHub: ${{ needs.check-artifacts.outputs.github_url }}"
-              echo "• PyPI: ${{ needs.check-artifacts.outputs.pypi_url }}"
-              echo "• Docker: ${{ needs.check-artifacts.outputs.docker_url }}"
+              echo ""
+              echo "- GitHub: ${{ needs.check-artifacts.outputs.github_url }}"
+              echo ""
+              echo "- PyPI: ${{ needs.check-artifacts.outputs.pypi_url }}"
+              echo ""
+              echo "- Docker: ${{ needs.check-artifacts.outputs.docker_url }}"
               echo 'EOF'
             } >> "$GITHUB_OUTPUT"
           fi
@@ -194,5 +201,5 @@ jobs:
                 - "run_id:${{ github.run_id }}"
                 - "workflow:${{ github.workflow }}"
                 - "version:${{ inputs.version }}"
-                - "is_rc:${{ needs.parse-validate-version.outputs.is_rc || 'unknown' }}"
+                - "released_rc:${{ steps.calculator.outputs.released_rc || 'false' }}"
                 - "url:https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
