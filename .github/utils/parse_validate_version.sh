@@ -62,6 +62,11 @@ if [[ "${PATCH}" == "0" && "${RC_NUM}" == "1" ]]; then
     IS_FIRST_RC="true"
 fi
 
+IS_RC="false"
+if [[ "${RC_NUM}" -gt 0 ]]; then
+    IS_RC="true"
+fi
+
 echo ""
 echo "ℹ️  Validating: ${VERSION} (branch: ${RELEASE_BRANCH}, first_rc: ${IS_FIRST_RC})"
 echo ""
@@ -164,4 +169,5 @@ OUTPUT_FILE="${GITHUB_OUTPUT:-/dev/stdout}"
     echo "major_minor=${MAJOR_MINOR}"
     echo "release_branch=${RELEASE_BRANCH}"
     echo "is_first_rc=${IS_FIRST_RC}"
+    echo "is_rc=${IS_RC}"
 } >> "${OUTPUT_FILE}"

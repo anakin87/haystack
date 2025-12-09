@@ -16,6 +16,7 @@ jobs:
       major_minor: ${{ steps.parse-validate.outputs.major_minor }}
       release_branch: ${{ steps.parse-validate.outputs.release_branch }}
       is_first_rc: ${{ steps.parse-validate.outputs.is_first_rc }}
+      is_rc: ${{ steps.parse-validate.outputs.is_rc }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
@@ -193,4 +194,5 @@ jobs:
                 - "run_id:${{ github.run_id }}"
                 - "workflow:${{ github.workflow }}"
                 - "version:${{ inputs.version }}"
+                - "is_rc:${{ needs.parse-validate-version.outputs.is_rc || 'unknown' }}"
                 - "url:https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
