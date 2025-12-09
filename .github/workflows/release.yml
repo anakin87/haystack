@@ -72,6 +72,10 @@ jobs:
   check-artifacts:
     needs: ["parse-validate-version", "release"]
     runs-on: ubuntu-latest
+    outputs:
+      github_url: ${{ steps.set-outputs.outputs.github_url }}
+      pypi_url: ${{ steps.set-outputs.outputs.pypi_url }}
+      docker_url: ${{ steps.set-outputs.outputs.docker_url }}
     env:
       GH_TOKEN: ${{ github.token }}
       VERSION: ${{ needs.parse-validate-version.outputs.version }}
@@ -114,6 +118,15 @@ jobs:
           }
           echo "✅ Docker image exists"
 
+      - name: Set artifact URLs
+        id: set-outputs
+        run: |
+          {
+            echo "github_url=https://github.com/${{ github.repository }}/releases/tag/v${{ env.PLACEHOLDER_VERSION }}"
+            echo "pypi_url=https://pypi.org/project/haystack-ai/${{ env.PLACEHOLDER_VERSION }}/"
+            echo "docker_url=https://hub.docker.com/r/deepset/haystack/tags?name=base-v${{ env.PLACEHOLDER_VERSION }}"
+          } >> "$GITHUB_OUTPUT"
+
       - name: Summary
         run: |
           echo ""
@@ -122,7 +135,62 @@ jobs:
           echo "=========================================="
           echo ""
           echo "📦 Artifacts:"
-          echo "   • GitHub: https://github.com/${{ github.repository }}/releases/tag/v${{ env.PLACEHOLDER_VERSION }}"
-          echo "   • PyPI:   https://pypi.org/project/haystack-ai/${{ env.PLACEHOLDER_VERSION }}/"
-          echo "   • Docker: https://hub.docker.com/r/deepset/haystack/tags?name=base-v${{ env.PLACEHOLDER_VERSION }}"
+          echo "   • GitHub: ${{ steps.set-outputs.outputs.github_url }}"
+          echo "   • PyPI:   ${{ steps.set-outputs.outputs.pypi_url }}"
+          echo "   • Docker: ${{ steps.set-outputs.outputs.docker_url }}"
           echo ""
+
+  report-to-datadog:
+    needs: ["parse-validate-version", "branch-off", "release", "check-artifacts"]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Calculate alert type and message
+        id: calculator
+        env:
+          VERSION: ${{ inputs.version }}
+        run: |
+          if [[ "${{ needs.parse-validate-version.result }}" == "failure" ]] || \
+             [[ "${{ needs.branch-off.result }}" == "failure" ]] || \
+             [[ "${{ needs.release.result }}" == "failure" ]] || \
+             [[ "${{ needs.check-artifacts.result }}" == "failure" ]]; then
+            {
+              echo "alert_type=error"
+              echo "title=Release ${VERSION} failed"
+              echo "event_text=Release ${VERSION} failed. Check workflow run for details."
+            } >> "$GITHUB_OUTPUT"
+          else
+            {
+              echo "alert_type=success"
+              echo "title=Release ${VERSION} completed successfully"
+            } >> "$GITHUB_OUTPUT"
+            {
+              echo 'event_text<<EOF'
+              echo "🎉 Release ${VERSION} completed successfully!"
+              echo ""
+              echo "📦 Artifacts:"
+              echo "• GitHub: ${{ needs.check-artifacts.outputs.github_url }}"
+              echo "• PyPI: ${{ needs.check-artifacts.outputs.pypi_url }}"
+              echo "• Docker: ${{ needs.check-artifacts.outputs.docker_url }}"
+              echo 'EOF'
+            } >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Send event to Datadog
+        uses: masci/datadog@v1
+        with:
+          api-key: ${{ secrets.CORE_DATADOG_API_KEY }}
+          api-url: https://api.datadoghq.eu
+          events: |
+            - title: "${{ steps.calculator.outputs.title }}"
+              text: "${{ steps.calculator.outputs.event_text }}"
+              alert_type: "${{ steps.calculator.outputs.alert_type }}"
+              source_type_name: "Github"
+              host: ${{ github.repository_owner }}
+              tags:
+                - "project:${{ github.repository }}"
+                - "job:${{ github.job }}"
+                - "run_id:${{ github.run_id }}"
+                - "workflow:${{ github.workflow }}"
+                - "version:${{ inputs.version }}"
+                - "url:https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
