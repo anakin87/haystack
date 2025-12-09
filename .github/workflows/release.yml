@@ -85,7 +85,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v5
         with:
-          fetch-tags: true
+          fetch-depth: 0
 
       - name: Wait for release workflows
         run: |
