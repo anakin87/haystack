@@ -9,6 +9,13 @@ on:
         description: 'Version to release with major.minor format (e.g., 2.99)'
         required: true
         type: string
+    outputs:
+      bump_version_pr_url:
+        description: 'URL of the bump version PR'
+        value: ${{ jobs.sync.outputs.bump_version_pr_url }}
+      unstable_docs_pr_url:
+        description: 'URL of the unstable docs PR'
+        value: ${{ jobs.sync.outputs.unstable_docs_pr_url }}
 
 env:
   PYTHON_VERSION: "3.9"
@@ -16,6 +23,9 @@ env:
 jobs:
   sync:
     runs-on: ubuntu-latest
+    outputs:
+      bump_version_pr_url: ${{ steps.bump-version-pr.outputs.pull-request-url }}
+      unstable_docs_pr_url: ${{ steps.unstable-docs-pr.outputs.pull-request-url }}
     steps:
       - name: Checkout this repo
         uses: actions/checkout@v5
@@ -34,12 +44,9 @@ jobs:
             echo "current_release_minor=$(cut -d "." -f 1,2 < VERSION.txt)" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Bump version on main
+      - name: Create release branch and bump version
+        id: bump-version
         shell: bash
-        env:
-          # We use the HAYSTACK_BOT_TOKEN here so the PR created by the step will
-          # trigger required workflows and can be merged by anyone
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
@@ -60,21 +67,27 @@ jobs:
           git tag "$VERSION_TAG" -m"$VERSION_TAG"
           git push --tags
 
-          # Create the branch that bump version in dev branch
           cat VERSION.txt
-          git checkout -b bump-version
-          git add .
-          git commit -m "Update unstable version to $NEW_VERSION"
-          git push -u origin bump-version
+          echo "new_version=$NEW_VERSION" >> "$GITHUB_OUTPUT"
 
-          # Create the PR
-          gh pr create -B main \
-            -H bump-version \
-            --title "Bump unstable version" \
-            --body "This PR bumps the unstable version for \`v2.x\`. \
-          The release branch \`v${{ steps.versions.outputs.current_release_minor }}.x\` has been correctly created. \
-          Verify documentation on Readme has been correctly updated before approving and merging this PR." \
-            --label "ignore-for-release-notes"
+      - name: Create Pull Request to bump unstable version
+        id: bump-version-pr
+        uses: peter-evans/create-pull-request@v7
+        with:
+          # TODO: replace with Haystack Bot token once transferred to Haystack repo
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "Update unstable version to ${{ steps.bump-version.outputs.new_version }}"
+          branch: bump-version
+          base: main
+          title: "Bump unstable version"
+          add-paths: |
+            VERSION.txt
+          body: |
+            This PR bumps the unstable version for `v2.x`.
+            The release branch `v${{ steps.versions.outputs.current_release_minor }}.x` has been correctly created.
+            Verify documentation on Readme has been correctly updated before approving and merging this PR.
+          labels: "ignore-for-release-notes"
+          reviewers: "${{ github.actor }}"
 
       - uses: actions/setup-python@v6
         with:
@@ -97,6 +110,7 @@ jobs:
           python ./.github/utils/create_unstable_docs_docusaurus.py --new-version ${{ steps.versions.outputs.current_release_minor }}
 
       - name: Create Pull Request with Docusaurus docs updates
+        id: unstable-docs-pr
         uses: peter-evans/create-pull-request@v7
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
