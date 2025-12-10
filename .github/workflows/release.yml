@@ -204,4 +204,3 @@ jobs:
                 - "workflow:${{ github.workflow }}"
                 - "version:${{ inputs.version }}"
                 - "released_rc:${{ steps.calculator.outputs.released_rc || 'false' }}"
-                - "url:https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
