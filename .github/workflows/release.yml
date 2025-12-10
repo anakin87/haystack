@@ -16,7 +16,6 @@ jobs:
       major_minor: ${{ steps.parse-validate.outputs.major_minor }}
       release_branch: ${{ steps.parse-validate.outputs.release_branch }}
       is_first_rc: ${{ steps.parse-validate.outputs.is_first_rc }}
-      is_rc: ${{ steps.parse-validate.outputs.is_rc }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
@@ -36,7 +35,7 @@ jobs:
     with:
       version: ${{ needs.parse-validate-version.outputs.major_minor }}
 
-  release:
+  create-release-tag:
     needs: ["parse-validate-version", "branch-off"]
     if: always() && needs.parse-validate-version.result == 'success' && needs.branch-off.result != 'failure'
     runs-on: ubuntu-latest
@@ -71,8 +70,8 @@ jobs:
           git push origin "$TAG"
 
   check-artifacts:
-    needs: ["parse-validate-version", "release"]
-    if: always() && needs.parse-validate-version.result == 'success' && needs.release.result == 'success'
+    needs: ["parse-validate-version", "create-release-tag"]
+    if: always() && needs.parse-validate-version.result == 'success' && needs.create-release-tag.result == 'success'
     runs-on: ubuntu-latest
     outputs:
       github_url: ${{ steps.set-outputs.outputs.github_url }}
@@ -129,21 +128,8 @@ jobs:
             echo "docker_url=https://hub.docker.com/r/deepset/haystack/tags?name=base-v${{ env.PLACEHOLDER_VERSION }}"
           } >> "$GITHUB_OUTPUT"
 
-      - name: Summary
-        run: |
-          echo ""
-          echo "=========================================="
-          echo "🎉 Release v${{ env.PLACEHOLDER_VERSION }} verified!"
-          echo "=========================================="
-          echo ""
-          echo "📦 Artifacts:"
-          echo "   • GitHub: ${{ steps.set-outputs.outputs.github_url }}"
-          echo "   • PyPI:   ${{ steps.set-outputs.outputs.pypi_url }}"
-          echo "   • Docker: ${{ steps.set-outputs.outputs.docker_url }}"
-          echo ""
-
-  report-to-datadog:
-    needs: ["parse-validate-version", "branch-off", "release", "check-artifacts"]
+  notify:
+    needs: ["parse-validate-version", "branch-off", "create-release-tag", "check-artifacts"]
     if: always()
     runs-on: ubuntu-latest
     steps:
@@ -152,10 +138,7 @@ jobs:
         env:
           VERSION: ${{ inputs.version }}
         run: |
-          if [[ "${{ needs.parse-validate-version.result }}" == "failure" ]] || \
-             [[ "${{ needs.branch-off.result }}" == "failure" ]] || \
-             [[ "${{ needs.release.result }}" == "failure" ]] || \
-             [[ "${{ needs.check-artifacts.result }}" == "failure" ]]; then
+          if [[ "${{ contains(needs.*.result, 'failure') }}" == "true" ]]; then
             {
               echo "alert_type=error"
               echo "title=Release ${VERSION} failed"
@@ -165,21 +148,15 @@ jobs:
             {
               echo "alert_type=success"
               echo "title=Release ${VERSION} completed successfully"
-              if [[ "${{ needs.parse-validate-version.outputs.is_rc }}" == "true" ]]; then
-                echo "released_rc=true"
-              fi
+              [[ "${VERSION}" == *"-rc"* ]] && echo "released_rc=true"
             } >> "$GITHUB_OUTPUT"
             {
               echo 'event_text<<EOF'
               echo "Release ${VERSION} completed successfully"
               echo ""
-              echo ""
               echo "📦 Artifacts:"
-              echo ""
               echo "- GitHub: ${{ needs.check-artifacts.outputs.github_url }}"
-              echo ""
               echo "- PyPI: ${{ needs.check-artifacts.outputs.pypi_url }}"
-              echo ""
               echo "- Docker: ${{ needs.check-artifacts.outputs.docker_url }}"
               echo 'EOF'
             } >> "$GITHUB_OUTPUT"

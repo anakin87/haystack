@@ -4,10 +4,11 @@
 # Usage: ./parse_validate_version.sh <version>
 # Output: Writes to $GITHUB_OUTPUT if set, otherwise to stdout
 #
-# Examples:
-#   ./parse_validate_version.sh v2.99.0-rc1   # First RC of minor
-#   ./parse_validate_version.sh v2.99.0-rc2   # Subsequent RC
-#   ./parse_validate_version.sh v2.99.0       # Final release
+# Example:
+#   ./parse_validate_version.sh v2.99.0-rc1
+#
+# This script is used in the release.yml workflow to parse and validate the version to be released.
+# Covers several checks to prevent accidental releases of incorrect versions.
 
 set -euo pipefail
 
@@ -32,15 +33,20 @@ branch_exists() {
     git ls-remote --heads origin "$1" | grep -q "$1"
 }
 
-# --- Parse version ---
+# --- Parse and validate version ---
 
 VERSION="${1#v}"  # Strip 'v' prefix
+
+echo ""
+echo "ℹ️  Validating: ${1}"
+echo ""
 
 if [[ ! "${VERSION}" =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)(-rc([0-9]+))?$ ]]; then
     fail "Invalid version format: $1\n\n"\
 "Expected format: vMAJOR.MINOR.PATCH or vMAJOR.MINOR.PATCH-rcN\n"\
 "Examples: v2.99.0-rc1, v2.99.0, v2.99.1-rc1"
 fi
+ok "Version format is valid"
 
 MAJOR="${BASH_REMATCH[1]}"
 MINOR="${BASH_REMATCH[2]}"
@@ -61,17 +67,6 @@ IS_FIRST_RC="false"
 if [[ "${PATCH}" == "0" && "${RC_NUM}" == "1" ]]; then
     IS_FIRST_RC="true"
 fi
-
-IS_RC="false"
-if [[ "${RC_NUM}" -gt 0 ]]; then
-    IS_RC="true"
-fi
-
-echo ""
-echo "ℹ️  Validating: ${VERSION} (branch: ${RELEASE_BRANCH}, first_rc: ${IS_FIRST_RC})"
-echo ""
-
-# --- Validations ---
 
 # 1. Tag must not already exist
 if tag_exists "${TAG}"; then
@@ -169,5 +164,4 @@ OUTPUT_FILE="${GITHUB_OUTPUT:-/dev/stdout}"
     echo "major_minor=${MAJOR_MINOR}"
     echo "release_branch=${RELEASE_BRANCH}"
     echo "is_first_rc=${IS_FIRST_RC}"
-    echo "is_rc=${IS_RC}"
 } >> "${OUTPUT_FILE}"

@@ -6,6 +6,9 @@
 #
 # Example:
 #   ./wait_for_workflows.sh v2.19.0 "Project release on PyPi" "Docker image release"
+#
+# This script is used in the release.yml workflow to wait for the workflows triggered by a specific release tag to
+# successfully complete.
 
 set -euo pipefail
 
