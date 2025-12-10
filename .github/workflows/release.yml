@@ -32,8 +32,6 @@ jobs:
     if: needs.parse-validate-version.outputs.is_first_rc == 'true'
     needs: parse-validate-version
     uses: ./.github/workflows/branch_off.yml
-    with:
-      version: ${{ needs.parse-validate-version.outputs.major_minor }}
 
   create-release-tag:
     needs: ["parse-validate-version", "branch-off"]
@@ -165,15 +163,14 @@ jobs:
           # For first RC, include the PRs to merge from branch-off
           if [[ "${{ needs.parse-validate-version.outputs.is_first_rc }}" == "true" ]]; then
             TXT+="\n📋 PRs to merge:\n"
-            TXT+="- Bump version: ${{ needs.branch-off.outputs.bump_version_pr_url }}\n"
-            TXT+="- Unstable docs: ${{ needs.branch-off.outputs.unstable_docs_pr_url }}\n"
+            TXT+="- Bump unstable version and create unstable docs: ${{ needs.branch-off.outputs.bump_version_pr_url }}\n"
           fi
 
           # For final minor releases (vX.Y.0), include the docs promotion PR
           if [[ "${VERSION}" =~ ^v[0-9]+\.[0-9]+\.0$ ]]; then
             PROMOTE_DOCS_PR_URL=$(gh pr list --repo "${{ github.repository }}" --head "promote-unstable-docs-${{ needs.parse-validate-version.outputs.major_minor }}" --json url --jq '.[0].url' 2>/dev/null || echo "")
             if [[ -n "${PROMOTE_DOCS_PR_URL}" ]]; then
-              TXT+="\n📋 PRs to merge (docs promotion):\n"
+              TXT+="\n📋 PRs to merge:\n"
               TXT+="- Promote unstable docs: ${PROMOTE_DOCS_PR_URL}\n"
             fi
           fi
