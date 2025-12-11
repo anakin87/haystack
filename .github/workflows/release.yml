@@ -190,7 +190,7 @@ jobs:
           # For final releases (not RCs), include info about pushing release notes to website
           if [[ "${VERSION}" != *"-rc"* ]]; then
             TXT+="\n📝 After refining and finalizing release notes, push them to Haystack website:\n"
-            TXT+="gh workflow run push_release_notes_to_website.yml -R deepset-ai/haystack -f version=${VERSION}\n"
+            TXT+="\`gh workflow run push_release_notes_to_website.yml -R deepset-ai/haystack -f version=${VERSION}\`\n"
           fi
 
           echo "event_text=${TXT}" >> "$GITHUB_OUTPUT"
