@@ -162,12 +162,14 @@ jobs:
 
           # For RCs, include link to the Tests workflow run
           if [[ "${VERSION}" == *"-rc"* ]]; then
-            TAG_SHA=$(gh api "repos/${{ github.repository }}/git/ref/tags/${VERSION}" --jq '.object.sha' 2>/dev/null || echo "")
-            TESTS_RUN=$(gh api "repos/${{ github.repository }}/actions/runs?head_sha=${TAG_SHA}" \
-              --jq '.workflow_runs[] | select(.name == "Tests") | .html_url' 2>/dev/null | head -1 || echo "")
+            COMMIT_SHA=$(gh api "repos/${{ github.repository }}/commits/${VERSION}" --jq '.sha' 2>/dev/null || echo "")
+            if [[ -n "${COMMIT_SHA}" ]]; then
+              TESTS_RUN=$(gh api "repos/${{ github.repository }}/actions/runs?head_sha=${COMMIT_SHA}" \
+                --jq '.workflow_runs[] | select(.name == "Tests") | .html_url' 2>/dev/null | head -1 || echo "")
               if [[ -n "${TESTS_RUN}" ]]; then
                 TXT+="\n🧪 Tests: ${TESTS_RUN}\n"
               fi
+            fi
           fi
 
           # For first RC, include the PRs to merge from branch-off
