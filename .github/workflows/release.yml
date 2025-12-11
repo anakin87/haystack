@@ -160,6 +160,16 @@ jobs:
           TXT+="- PyPI: ${{ needs.check-artifacts.outputs.pypi_url }}\n"
           TXT+="- Docker: ${{ needs.check-artifacts.outputs.docker_url }}\n"
 
+          # For RCs, include link to the Tests workflow run
+          if [[ "${VERSION}" == *"-rc"* ]]; then
+            TAG_SHA=$(gh api "repos/${{ github.repository }}/git/ref/tags/${VERSION}" --jq '.object.sha' 2>/dev/null || echo "")
+            TESTS_RUN=$(gh api "repos/${{ github.repository }}/actions/runs?head_sha=${TAG_SHA}" \
+              --jq '.workflow_runs[] | select(.name == "Tests") | .html_url' 2>/dev/null | head -1 || echo "")
+              if [[ -n "${TESTS_RUN}" ]]; then
+                TXT+="\n🧪 Tests: ${TESTS_RUN}\n"
+              fi
+          fi
+
           # For first RC, include the PRs to merge from branch-off
           if [[ "${{ needs.parse-validate-version.outputs.is_first_rc }}" == "true" ]]; then
             TXT+="\n📋 PRs to merge:\n"
