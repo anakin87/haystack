@@ -18,7 +18,6 @@ def csv_converter():
 
 class TestCSVToDocument:
     def test_init(self, csv_converter):
-        assert False
         assert isinstance(csv_converter, CSVToDocument)
 
     def test_run(self, test_files_path):
