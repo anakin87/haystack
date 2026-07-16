@@ -77,21 +77,10 @@ jobs:
           START: v${{ steps.version.outputs.current_release }}-rc0
           END: ${{ github.ref_name }}
         run: |
-          JQ_EXPR='[.commits[].author.login]
-            | map(select(. != null and . != "HaystackBot" and . != "dependabot[bot]" and . != "github-actions[bot]"))
-            | unique
-            | sort_by(ascii_downcase)
-            | map("@\(.)")
-            | join(", ")'
-          CONTRIBUTORS=$(gh api "repos/deepset-ai/haystack/compare/$START...$END" \
-            --jq "$JQ_EXPR") || { echo "Unable to fetch contributors"; exit 1; }
-
-          {
-            echo ""
-            echo "## 💙 Big thank you to everyone who contributed to this release!"
-            echo ""
-            echo "$CONTRIBUTORS"
-          } >> enhanced_relnotes.md
+          # DRY RUN: contributor list skipped. The real step compares tags on deepset-ai/haystack,
+          # which 404s here because the release-candidate tags only exist on the fork. The release
+          # body (enhanced_relnotes.md) is still produced; it just omits the thank-you section.
+          echo "::notice::[DRY RUN] Skipping contributor list (would query deepset-ai/haystack compare ${START}...${END})"
 
       - name: Debug
         run: |
