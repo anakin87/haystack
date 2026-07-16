@@ -1,3 +1,8 @@
+# SPDX-FileCopyrightText: 2022-present deepset GmbH <info@deepset.ai>
+#
+# SPDX-License-Identifier: Apache-2.0
+
+
 #!/usr/bin/env bash
 #
 # reset_release.sh — wipe the Haystack 3.0 *dry-run* artifacts from the fork so a release
