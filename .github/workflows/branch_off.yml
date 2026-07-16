@@ -96,4 +96,5 @@ jobs:
 
             You can inspect the docs preview (two unstable versions will be available) and merge it.
           labels: "ignore-for-release-notes"
-          reviewers: "${{ github.actor }}"
+          # DRY RUN: no reviewer requested. On the fork the PR author is the RELEASE_PAT owner
+          # (github.actor), and GitHub rejects requesting a review from the PR's own author.
