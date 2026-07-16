@@ -27,7 +27,7 @@ jobs:
           # HaystackBot (a ruleset-bypass actor) instead of the default
           # github-actions[bot], which only has contents:read and is blocked by
           # the release rulesets.
-          token: ${{ secrets.HAYSTACK_BOT_TOKEN }}
+          token: ${{ secrets.RELEASE_PAT }}  # DRY RUN: classic PAT stands in for the bot token (no rulesets on the fork)
 
       - name: Define all versions
         id: versions
@@ -43,7 +43,7 @@ jobs:
         env:
           # We use the HAYSTACK_BOT_TOKEN here so the PR created by the step will
           # trigger required workflows and can be merged by anyone
-          GITHUB_TOKEN: ${{ secrets.HAYSTACK_BOT_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.RELEASE_PAT }}
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
@@ -81,7 +81,7 @@ jobs:
         id: create-pr
         uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8.1.1
         with:
-          token: ${{ secrets.HAYSTACK_BOT_TOKEN }}
+          token: ${{ secrets.RELEASE_PAT }}  # DRY RUN: classic PAT stands in for the bot token (no rulesets on the fork)
           commit-message: "Bump unstable version and create unstable docs"
           branch: bump-version
           base: main
