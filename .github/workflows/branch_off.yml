@@ -27,7 +27,7 @@ jobs:
           # HaystackBot (a ruleset-bypass actor) instead of the default
           # github-actions[bot], which only has contents:read and is blocked by
           # the release rulesets.
-          token: ${{ secrets.HAYSTACK_BOT_TOKEN }}
+          token: ${{ secrets.RELEASE_PAT }}  # DRY RUN: classic PAT stands in for the bot token (no rulesets on the fork)
 
       - name: Define all versions
         id: versions
@@ -43,7 +43,7 @@ jobs:
         env:
           # We use the HAYSTACK_BOT_TOKEN here so the PR created by the step will
           # trigger required workflows and can be merged by anyone
-          GITHUB_TOKEN: ${{ secrets.HAYSTACK_BOT_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.RELEASE_PAT }}
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
@@ -62,7 +62,7 @@ jobs:
         with:
           python-version: "${{ env.PYTHON_VERSION }}"
 
-      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: "22"
 
@@ -81,7 +81,7 @@ jobs:
         id: create-pr
         uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8.1.1
         with:
-          token: ${{ secrets.HAYSTACK_BOT_TOKEN }}
+          token: ${{ secrets.RELEASE_PAT }}  # DRY RUN: classic PAT stands in for the bot token (no rulesets on the fork)
           commit-message: "Bump unstable version and create unstable docs"
           branch: bump-version
           base: main
@@ -96,4 +96,5 @@ jobs:
 
             You can inspect the docs preview (two unstable versions will be available) and merge it.
           labels: "ignore-for-release-notes"
-          reviewers: "${{ github.actor }}"
+          # DRY RUN: no reviewer requested. On the fork the PR author is the RELEASE_PAT owner
+          # (github.actor), and GitHub rejects requesting a review from the PR's own author.

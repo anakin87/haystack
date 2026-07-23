@@ -26,7 +26,8 @@ jobs:
     steps:
       - name: Verify the triggering user may release
         env:
-          GH_TOKEN: ${{ secrets.HAYSTACK_BOT_TOKEN }}
+          # DRY RUN: default token is enough for this read-only role check (you are admin on your fork).
+          GH_TOKEN: ${{ github.token }}
           ACTOR: ${{ github.triggering_actor }}
         run: |
           ROLE=$(gh api "repos/${{ github.repository }}/collaborators/${ACTOR}/permission" --jq '.role_name')
@@ -78,11 +79,13 @@ jobs:
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           fetch-depth: 0  # needed to fetch tags and branches
-          # use this token so the created tag triggers workflows (does not happen with the default github.token)
-          token: ${{ secrets.HAYSTACK_BOT_TOKEN }}
+          # DRY RUN: MUST be a classic PAT, NOT github.token: a tag pushed with the built-in
+          # GITHUB_TOKEN does not trigger other workflows, and triggering pypi/docker/github_release
+          # is exactly what this dry run verifies. Create secret RELEASE_PAT (classic, repo+workflow).
+          token: ${{ secrets.RELEASE_PAT }}
       - name: Update VERSION.txt and create tag
         env:
-          GITHUB_TOKEN: ${{ secrets.HAYSTACK_BOT_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.RELEASE_PAT }}
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
@@ -129,9 +132,11 @@ jobs:
             for _ in {1..5}; do curl -sf "$2" > /dev/null && echo "✅ $1" && return 0; sleep 30; done
             echo "❌ $1 not found" && return 1
           }
+          # GitHub release is real on the fork (github_release.yml still runs), so this check is genuine.
           check "GitHub Release" "https://api.github.com/repos/${{ github.repository }}/releases/tags/v${{ env.VERSION }}"
-          check "PyPI package" "https://pypi.org/pypi/haystack-ai/${{ env.VERSION }}/json"
-          check "Docker image" "https://hub.docker.com/v2/repositories/deepset/haystack/tags/base-v${{ env.VERSION }}"
+          # DRY RUN: nothing is published to PyPI / Docker Hub, so these checks are faked.
+          echo "✅ PyPI package [DRY RUN - not actually published]"
+          echo "✅ Docker image [DRY RUN - not actually published]"
 
       - name: Set artifact URLs
         id: set-outputs
@@ -144,7 +149,8 @@ jobs:
 
   bump-dc-pipeline-templates:
     needs: ["parse-validate-version", "check-artifacts"]
-    if: always() && needs.check-artifacts.result == 'success' && needs.parse-validate-version.outputs.is_rc == 'true'
+    # DRY RUN: skipped - opens a PR in a private deepset-ai repo and needs HAYSTACK_BOT_TOKEN.
+    if: false
     runs-on: ubuntu-slim
     outputs:
       pr_url: ${{ steps.create-pr.outputs.pull-request-url }}
@@ -175,7 +181,8 @@ jobs:
 
   bump-deepset-cloud-custom-nodes:
     needs: ["parse-validate-version", "check-artifacts"]
-    if: always() && needs.check-artifacts.result == 'success' && needs.parse-validate-version.outputs.is_rc == 'true'
+    # DRY RUN: skipped - opens a PR in a private deepset-ai repo and needs HAYSTACK_BOT_TOKEN.
+    if: false
     runs-on: ubuntu-slim
     outputs:
       pr_url: ${{ steps.create-pr.outputs.pull-request-url }}
@@ -225,7 +232,8 @@ jobs:
 
   bump-haystack-runtime:
     needs: ["parse-validate-version", "check-artifacts"]
-    if: always() && needs.check-artifacts.result == 'success' && needs.parse-validate-version.outputs.is_rc == 'true'
+    # DRY RUN: skipped - dispatches a workflow in a private deepset-ai repo and needs HAYSTACK_BOT_TOKEN.
+    if: false
     runs-on: ubuntu-slim
     outputs:
       pr_url: ${{ steps.wait-pr.outputs.pr_url }}
@@ -294,9 +302,8 @@ jobs:
           HAYSTACK_RUNTIME_PR_URL: ${{ needs.bump-haystack-runtime.outputs.pr_url }}
         run: .github/utils/prepare_release_notification.sh
 
-      - name: Send release notification to Slack
-        uses: slackapi/slack-github-action@45a88b9581bfab2566dc881e2cd66d334e621e2c # v3.0.3
-        with:
-          webhook: ${{ secrets.SLACK_WEBHOOK_URL_RELEASE }}
-          webhook-type: incoming-webhook
-          payload-file-path: slack_payload.json
+      # DRY RUN: real Slack post replaced with a print of the payload that would have been sent.
+      - name: Send release notification to Slack (dry-run)
+        run: |
+          echo "::notice::[DRY RUN] Would post this Slack payload:"
+          cat slack_payload.json

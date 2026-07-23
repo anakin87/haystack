@@ -16,9 +16,6 @@ permissions:
 jobs:
   release-on-pypi:
     runs-on: ubuntu-latest
-    environment: pypi
-    permissions:
-      id-token: write
 
     steps:
       - name: Checkout
@@ -34,5 +31,8 @@ jobs:
       - name: Build Haystack
         run: hatch build
 
-      - name: Publish on PyPi
-        uses: pypa/gh-action-pypi-publish@cef221092ed1bacb1cc03d23a2d87d1d172e277b # v1.14.0
+      # DRY RUN: real publish replaced with a print. The build above still runs so packaging is exercised.
+      - name: Publish on PyPi (dry-run)
+        run: |
+          echo "::notice::[DRY RUN] Would publish to PyPI. Built artifacts:"
+          ls -la dist/
